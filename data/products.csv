@@ -1,0 +1,19 @@
+﻿product_id,product_name,product_group,description
+PRD-DRAM,DRAM·HBM,semiconductor,첨단 메모리 반도체
+PRD-CPU,마이크로프로세서,semiconductor,실리콘 웨이퍼 공정으로 제조한 마이크로프로세서
+PRD-BIO,바이오의약품,biologics,포유류 세포 기반 바이오의약품 위탁제조
+PRD-GPU,AI 컴퓨팅 플랫폼,computing,NVIDIA AI 인프라와 연계한 컴퓨팅 플랫폼
+PRD-AERO,항공기 구조물,aerospace,상용항공기 날개·기체 구조물
+PRD-AIRCRAFT,상용항공기,aerospace,Boeing 단일통로·광동체·화물기
+PRD-CLOUD,클라우드·데이터센터,service,서버·저장장치 기반 클라우드 인프라
+PRD-HEAVY,중장비 제조·수리,manufacturing,광산 등 중장비용 제조·수리 서비스
+PRD-HYPER,초분광 카메라,photonics,분광영상 취득 시스템
+PRD-LIDAR,메탄 탐지 LiDAR,photonics,메탄 누출 위치·배출량 파악을 위한 광학센서
+PRD-SHIP,선박 건조·수리,manufacturing,선박 건조·보수·현대화
+PRD-OIL,원유·석유환산 생산,oil_gas,원유 생산; 통계의BOE는가스 등 에너지환산량 포함
+PRD-PGM,백금족 금속,minerals,팔라듐·백금2E PGM
+PRD-WOOD,목재·산림제품,forestry,산림·목재제품
+PRD-POTATO,냉동감자,food,냉동감자 및 감자가공 제품
+PRD-SEAFOOD,수산가공품,seafood,명태·대구·연어 등 가공수산물
+PRD-POWER,전력,energy,수력·지열 등 발전 전력
+PRD-CONTAINER,컨테이너 처리,logistics,"항만 컨테이너 처리 서비스, 집계단위TEU"

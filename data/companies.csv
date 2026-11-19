@@ -1,0 +1,39 @@
+﻿company_id,name_ko,name_en,country,entity_type,parent_company_id,website,aliases,is_demo,visibility
+CO-MICRON,마이크론,Micron Technology,US,company,,https://www.micron.com/us-expansion/idaho,마이크론;Micron Technology,0,public
+CO-INTEL,인텔,Intel Corporation,US,company,,https://www.oregon.gov/deq/aq/cao/nwr/Pages/Intel-Aloha.aspx,인텔;Intel Corporation,0,public
+CO-LONZA,론자,Lonza,CH,company,,https://www.lonza.com/news/2024-10-01-16-45,론자;Lonza,0,public
+CO-ROCHE,로슈,Roche,CH,company,,https://www.lonza.com/news/2024-10-01-16-45,로슈;Roche,0,public
+CO-GENENTECH,제넨텍,Genentech,US,company,CO-ROCHE,https://www.gene.com/contact-us/visit-us,제넨텍;Genentech,0,public
+CO-NVIDIA,엔비디아,NVIDIA,US,company,,https://nvidianews.nvidia.com/news/sk-hynix-ai-factory,엔비디아;NVIDIA,0,public
+CO-SKHYNIX,SK하이닉스,SK hynix,KR,company,,https://nvidianews.nvidia.com/news/sk-hynix-ai-factory,SK하이닉스;SK hynix,0,public
+CO-SKHYNIXAMERICA,SK하이닉스 아메리카,SK hynix America Inc.,US,company,CO-SKHYNIX,https://m.skhynix.com/company/UI-FR-CP06/,SK하이닉스 아메리카;SK hynix America Inc.,0,public
+CO-SAMSUNG,삼성전자,Samsung Electronics,KR,company,,https://semiconductor.samsung.com/about-us/global-network/sales-network/,삼성전자;Samsung Electronics,0,public
+CO-KAI,한국항공우주산업,Korea Aerospace Industries,KR,company,,https://www.koreaaero.com/EN/Business/AerostructuresCommercial_Boeing.aspx,한국항공우주산업;Korea Aerospace Industries,0,public
+CO-BOEING,보잉,Boeing,US,company,,https://boeing.mediaroom.com/2026-09-16-Boeing%2C-Korean-Air-Announce-Record-103-Airplane-Order,보잉;Boeing,0,public
+CO-KOREANAIR,대한항공,Korean Air,KR,company,,https://boeing.mediaroom.com/2026-09-16-Boeing%2C-Korean-Air-Announce-Record-103-Airplane-Order,대한항공;Korean Air,0,public
+CO-MICROSOFT,마이크로소프트,Microsoft,US,company,,https://local.microsoft.com/communities/americas/quincy/,마이크로소프트;Microsoft,0,public
+CO-AMAZON,아마존,Amazon,US,company,,https://www.aboutamazon.com/news/aws/committed-to-our-communities-the-economic-impact-of-awss-15-6-billion-investment-in-oregon,아마존;Amazon,0,public
+CO-UEC,우마틸라 전력협동조합,Umatilla Electric Cooperative,US,company,,https://www.aboutamazon.com/news/aws/committed-to-our-communities-the-economic-impact-of-awss-15-6-billion-investment-in-oregon,우마틸라 전력협동조합;Umatilla Electric Cooperative,0,public
+CO-LH,L&H 인더스트리얼,L&H Industrial,US,company,,https://www.lnh.net/news/inside-lh-a-shop-tour-of-gillette-wyoming/,L&H 인더스트리얼;L&H Industrial,0,public
+CO-RESONON,레조논,Resonon,US,company,,https://resonon.com/contact-us,레조논;Resonon,0,public
+CO-BRIDGER,브리저 포토닉스,Bridger Photonics,US,company,,https://www.bridgerphotonics.com/blog/bridger-photonics-releases-second-generation-methane-detection-sensor-gas-mapping-lidar-20,브리저 포토닉스;Bridger Photonics,0,public
+CO-JAG,JAG 케치칸,JAG Ketchikan,US,company,,https://aidea.org/Programs/Projects-Owned-Assets/Ketchikan-Shipyard,JAG 케치칸;JAG Ketchikan,0,public
+CO-AIDEA,알래스카 산업개발수출청,Alaska Industrial Development and Export Authority,US,public_authority,,https://aidea.org/Programs/Projects-Owned-Assets/Ketchikan-Shipyard,알래스카 산업개발수출청;Alaska Industrial Development and Export Authority,0,public
+CO-CONOCO,코노코필립스,ConocoPhillips,US,company,,https://alaska.conocophillips.com/who-we-are/alaska-operations/greater-kuparuk-area/,코노코필립스;ConocoPhillips,0,public
+CO-SIBANYE,시반예 스틸워터,Sibanye-Stillwater,ZA,company,,https://www.sibanyestillwater.com/business/pgm-operations-americas/stillwater-east-boulder/,시반예 스틸워터;Sibanye-Stillwater,0,public
+CO-WEYER,웨이어하우저,Weyerhaeuser,US,company,,https://www.weyerhaeuser.com/company/contact-us-locations/,웨이어하우저;Weyerhaeuser,0,public
+CO-LAMBWESTON,램웨스턴,Lamb Weston,US,company,,https://www.sec.gov/Archives/edgar/data/1679273/000167927326000026/lw-20260531.htm,램웨스턴;Lamb Weston,0,public
+CO-RDO,RDO 프로즌,RDO Frozen Co.,US,company,,https://www.sec.gov/Archives/edgar/data/1679273/000167927326000026/lw-20260531.htm,RDO 프로즌;RDO Frozen Co.,0,public
+CO-PACIFIC,퍼시픽 시푸드,Pacific Seafood,US,company,,https://www.pacificseafood.com/news/,퍼시픽 시푸드;Pacific Seafood,0,public
+CO-TRIDENT,트라이던트 시푸드,Trident Seafoods,US,company,,https://www.pacificseafood.com/news/,트라이던트 시푸드;Trident Seafoods,0,public
+CO-SILVERBAY,실버베이 시푸드,Silver Bay Seafoods,US,company,,https://www.tridentseafoods.com/about-us/news/silver-bay-seafoods-finalizes-acquisition-of-tridents-ketchikan-plant,실버베이 시푸드;Silver Bay Seafoods,0,public
+CO-ECPHILLIPS,E.C.필립스,E.C. Phillips & Son,US,company,,https://tridentseafoods.com/about-us/news/e-c-phillips-and-son-inc-buys-tridents-petersburg-plant,E.C.필립스;E.C. Phillips & Son,0,public
+CO-CALPINE,칼파인,Calpine,US,company,,https://www.calpine.com/clean-and-reliable-power/our-assets/geothermal/,칼파인;Calpine,0,public
+CO-IDAHOPOWER,아이다호 파워,Idaho Power,US,company,,https://oemr.idaho.gov/re/hydropower/,아이다호 파워;Idaho Power,0,public
+CO-SPI,시에라 퍼시픽,Sierra Pacific Industries,US,company,,https://spi-ind.com/Home/AboutUs/rel%3D,시에라 퍼시픽;Sierra Pacific Industries,0,public
+CO-NWSA,노스웨스트 시포트 얼라이언스,Northwest Seaport Alliance,US,public_authority,,https://s3.us-west-2.amazonaws.com/nwseaportalliance.com.if-us-west-2-or/2025-04/2024%20NWSA%20Annual%20Cargo%20Report.pdf,노스웨스트 시포트 얼라이언스;Northwest Seaport Alliance,0,public
+CO-PORTOAKLAND,오클랜드항,Port of Oakland,US,public_authority,,https://www.portofoakland.com/port-of-oakland-records-2-26-million-teus-last-year,오클랜드항;Port of Oakland,0,public
+CO-HEADWATERS,헤드워터스 허브,Headwaters Hub,US,consortium,,https://www.eda.gov/funding/programs/regional-technology-and-innovation-hubs/2023/Headwaters-Hub,헤드워터스 허브;Headwaters Hub,0,public
+CO-RISK-TOTE,토트 마리타임 알래스카,TOTE Maritime Alaska,US,company,,https://www.totemaritime.com/alaska/,,0,public
+CO-RISK-MATSON,매트슨,Matson,US,company,,https://www.matson.com/,,0,public
+CO-RISK-AKRR,알래스카 철도,Alaska Railroad,US,public_corporation,,https://www.alaskarailroad.com/,,0,public

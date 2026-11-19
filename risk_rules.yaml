@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "purpose": "관심 대상에 등록된 직접 영향 연결을 알림으로 표시",
+  "eligible_event_statuses": ["active", "ongoing"],
+  "exclude_replay": true,
+  "exclude_ended_or_expired": true,
+  "requires_registered_event_impact": true,
+  "priority": "review",
+  "dedupe_key": "watchlist_id:event_id",
+  "limits": "기관의 공식 위험등급이나 피해 예측 모델이 아니며, 근거 부족을 낮은 위험으로 변환하지 않음"
+}

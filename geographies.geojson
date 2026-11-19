@@ -1,0 +1,11 @@
+{
+  "type": "FeatureCollection",
+  "features": [],
+  "metadata": {
+    "status": "download_blocked",
+    "coordinate_system": "EPSG:4326",
+    "source_id": "SRC-GEO-002",
+    "boundary_version": "2024-01-01",
+    "note": "실제 좌표 응답 미수집. fetch_geographies.py 실행 후 원문 경계를 적재. 북부40은 정의되지 않아 자동 생성하지 않음."
+  }
+}

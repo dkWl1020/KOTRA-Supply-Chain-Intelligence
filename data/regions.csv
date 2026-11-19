@@ -1,0 +1,21 @@
+﻿region_id,name_ko,name_en,area_type,parent_id,fips,scope_note
+US,미국,United States,country,,,
+KR,한국,Republic of Korea,country,,,한국 기업·수출입 대상국 연결용 ISO 국가 코드
+US-CA,캘리포니아,California,state,US,06,주 전체 비교 범위. 북부 캘리포니아 분석값에 CA 주 전체 값을 대입하지 않음.
+US-WA,워싱턴,Washington,state,US,53,주 전체. 카운티·도시·시설 통계와 범위를 구분.
+US-OR,오레건,Oregon,state,US,41,주 전체. 카운티·도시·시설 통계와 범위를 구분.
+US-ID,아이다호,Idaho,state,US,16,주 전체. 카운티·도시·시설 통계와 범위를 구분.
+US-WY,와이오밍,Wyoming,state,US,56,주 전체. 카운티·도시·시설 통계와 범위를 구분.
+US-MT,몬태나,Montana,state,US,30,주 전체. 카운티·도시·시설 통계와 범위를 구분.
+US-AK,알래스카,Alaska,state,US,02,주 전체. 카운티·도시·시설 통계와 범위를 구분.
+US-CA-NORTH,북부 캘리포니아,Northern California project region,research_region,US-CA,,과제상 권역. 기존 40개 카운티 가정의 정확 목록이 고정되지 않아 총계와 경계는 산출하지 않음. Bay9는 별도 분석 범위.
+US-CA-BAY9,샌프란시스코 베이 9개 카운티,San Francisco Bay Area 9 counties,research_region,US-CA,,MTC가 정의한 9개 카운티 합계. 북부 캘리포니아 전체의 대체값으로 사용하지 않음.
+US-CA-06001,Alameda 카운티,Alameda County,county,US-CA,06001,Bay Area 9개 카운티 분석에 포함
+US-CA-06013,Contra Costa 카운티,Contra Costa County,county,US-CA,06013,Bay Area 9개 카운티 분석에 포함
+US-CA-06041,Marin 카운티,Marin County,county,US-CA,06041,Bay Area 9개 카운티 분석에 포함
+US-CA-06055,Napa 카운티,Napa County,county,US-CA,06055,Bay Area 9개 카운티 분석에 포함
+US-CA-06075,San Francisco 카운티,San Francisco County,county,US-CA,06075,Bay Area 9개 카운티 분석에 포함
+US-CA-06081,San Mateo 카운티,San Mateo County,county,US-CA,06081,Bay Area 9개 카운티 분석에 포함
+US-CA-06085,Santa Clara 카운티,Santa Clara County,county,US-CA,06085,Bay Area 9개 카운티 분석에 포함
+US-CA-06095,Solano 카운티,Solano County,county,US-CA,06095,Bay Area 9개 카운티 분석에 포함
+US-CA-06097,Sonoma 카운티,Sonoma County,county,US-CA,06097,Bay Area 9개 카운티 분석에 포함

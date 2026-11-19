@@ -1,0 +1,13 @@
+﻿impact_id,event_id,target_type,target_id,impact_type,impact_description,assessment_basis,relationship_id,analysis_id,regulation_id,assessment_status,input_version_refs,review_id
+IMP-RISK-001,EVT-RISK-STRIKE,companies,CO-BOEING,production_interruption,2024년 파업으로 상업용 항공기 생산이 영향을 받았고 4분기에 재개됨,reported_impact,,,,documented_historical,[],
+IMP-RISK-002,EVT-RISK-MAX,industries,IND-AERO,inspection_requirement,특정 737-9 항공기의 운항 복귀에 점검·시정조치 요구,reported_impact,,,REG-RISK-FAA2024,documented_historical,[],
+IMP-RISK-003,EVT-RISK-MERBOK,regions,US-AK,infrastructure_damage,서부 연안 일부 도로·비행장 피해. Anchorage 항만 중단으로 확대하지 않음,reported_impact,,,,documented_historical,[],
+IMP-RISK-004,EVT-RISK-YELLOWSTONE,regions,US-WY,road_damage,Mammoth Hot Springs 주변 북부 출입구 연결 도로 피해,reported_impact,,,,documented_historical,[],
+IMP-RISK-005,EVT-RISK-YELLOWSTONE,regions,US-MT,road_damage,Gardiner·Cooke City·Silver Gate와 연결되는 도로 피해,reported_impact,,,,documented_historical,[],
+IMP-RISK-006,EVT-RISK-DIXIE,regions,US-CA-NORTH,wildfire_extent,CAL FIRE가 제시한 5개 카운티 피해 범위. 모든 시설의 피해를 뜻하지 않음,reported_impact,,,,documented_historical,[],
+IMP-RISK-007,EVT-RISK-ORFIRES,industries,IND-FOREST,forest_infrastructure_damage,산림 사면·도로·배수시설 복구와 재식재 과제,reported_impact,,,,documented_historical,[],
+IMP-RISK-008,EVT-RISK-IDFLOOD,regions,US-ID,public_infrastructure_damage,지정 8개 카운티 공공시설 복구 지원 대상,reported_impact,,,,documented_historical,[],
+IMP-RISK-009,EVT-RISK-PNWHEAT,regions,US-OR,weather_exposure,극한 고온 관측. 생산량 감소는 이 자료만으로 계산할 수 없음,published_observation,,,,documented_historical,[],
+IMP-RISK-010,EVT-RISK-PNWHEAT,regions,US-WA,weather_exposure,Washington 측 관측소에서도 기록적 고온 발생,published_observation,,,,documented_historical,[],
+IMP-RISK-011,EVT-RISK-WAFLOOD,regions,US-WA,river_flooding,Nooksack·Skagit 강의 대규모 범람,reported_impact,,,,documented_historical,[],
+IMP-RISK-012,EVT-RISK-AKQUAKE,regions,US-AK,seismic_event,남중부 Alaska의 역사 지진 사건. 개별 물류 지연은 별도 운송 기록 필요,published_observation,,,,documented_historical,[],

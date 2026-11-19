@@ -1,0 +1,2805 @@
+{
+  "schema_version": "1.0.0",
+  "database": "sqlite",
+  "encoding": "utf-8-sig",
+  "null_policy": "Empty CSV cells become SQL NULL; numeric zero is preserved. No synthetic observation is inserted.",
+  "datasets": {
+    "regions": {
+      "file": "data/regions.csv",
+      "kind": "seed",
+      "primary_key": [
+        "region_id"
+      ],
+      "description": "7개 조사 권역과 주·카운티·도시의 기준 정보",
+      "columns": [
+        {
+          "name": "region_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지역 고유 ID"
+        },
+        {
+          "name": "name_ko",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "한국어 표시 이름"
+        },
+        {
+          "name": "name_en",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "공식 영문 이름"
+        },
+        {
+          "name": "area_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지역 종류: country, state, county, city, research_region 등"
+        },
+        {
+          "name": "parent_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "상위 지역의 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "fips",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "문자열 FIPS; 앞자리 0 보존",
+          "format": "code_string"
+        },
+        {
+          "name": "scope_note",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "지역·산업·소유 형태·직접/간접 등 집계 범위"
+        }
+      ]
+    },
+    "region_memberships": {
+      "file": "data/region_memberships.csv",
+      "kind": "seed",
+      "primary_key": [
+        "membership_id"
+      ],
+      "description": "조사 권역에 포함되는 행정구역",
+      "columns": [
+        {
+          "name": "membership_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "권역 포함 관계의 고유 ID"
+        },
+        {
+          "name": "research_region_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "조사 권역의 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "member_region_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "권역에 포함되는 지역의 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "valid_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "valid_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "industries": {
+      "file": "data/industries.csv",
+      "kind": "seed",
+      "primary_key": [
+        "industry_id"
+      ],
+      "description": "첨단제조·에너지자원·식품물류의 공통 산업 분류",
+      "columns": [
+        {
+          "name": "industry_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "산업 고유 ID"
+        },
+        {
+          "name": "industry_name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사용자 화면에 표시할 산업 이름"
+        },
+        {
+          "name": "cluster",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "과제의 상위 산업군: 첨단제조, 에너지·자원, 식품·물류"
+        },
+        {
+          "name": "parent_industry_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "상위 산업의 고유 ID",
+          "references": {
+            "dataset": "industries",
+            "column": "industry_id"
+          }
+        },
+        {
+          "name": "definition",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 산업·지표가 포함하는 범위와 정의"
+        }
+      ]
+    },
+    "companies": {
+      "file": "data/companies.csv",
+      "kind": "seed",
+      "primary_key": [
+        "company_id"
+      ],
+      "description": "한국 기업·미국 기업·관련 기관의 기준 정보",
+      "columns": [
+        {
+          "name": "company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 고유 ID"
+        },
+        {
+          "name": "name_ko",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "한국어 표시 이름"
+        },
+        {
+          "name": "name_en",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "공식 영문 이름"
+        },
+        {
+          "name": "country",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "국가 코드 ISO 3166-1 alpha-2"
+        },
+        {
+          "name": "entity_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "법인·공공기관·협회·컨소시엄 등 조직 유형"
+        },
+        {
+          "name": "parent_company_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "상위 모회사의 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "website",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 조직의 공식 웹사이트"
+        },
+        {
+          "name": "aliases",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "다른 명칭. 세미콜론 구분 텍스트"
+        },
+        {
+          "name": "is_demo",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "가상 시연 자료 여부: 0 실제, 1 가상",
+          "allowed_values": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "visibility",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "공개 또는 제한된 자료의 접근 범위"
+        }
+      ]
+    },
+    "facilities": {
+      "file": "data/facilities.csv",
+      "kind": "seed",
+      "primary_key": [
+        "facility_id"
+      ],
+      "description": "공장·연구소·광산·발전소·항만·공항·창고 등 실제 시설",
+      "columns": [
+        {
+          "name": "facility_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "시설 고유 ID"
+        },
+        {
+          "name": "facility_name",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "공식 시설명. 법인명과 실제 거점을 구분"
+        },
+        {
+          "name": "operator_company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "시설 운영 기업의 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "owner_company_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "시설 소유 기업의 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "region_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지역 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "facility_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "본사·연구소·공장·창고·항만·공항 등 시설 기능"
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원문에 표시된 실제 시설 주소"
+        },
+        {
+          "name": "latitude",
+          "type": "REAL",
+          "nullable": true,
+          "description": "WGS84 위도; 알 수 없으면 빈칸"
+        },
+        {
+          "name": "longitude",
+          "type": "REAL",
+          "nullable": true,
+          "description": "WGS84 경도; 알 수 없으면 빈칸"
+        },
+        {
+          "name": "operating_status",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "발표 자료 기준의 운영·건설·폐쇄 등 시설 상태"
+        },
+        {
+          "name": "coordinate_source",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "좌표를 얻은 원문 또는 좌표 산정 방법"
+        },
+        {
+          "name": "geocoding_precision",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "좌표 정밀도. 시설·주소·도시 등"
+        },
+        {
+          "name": "valid_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "valid_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "products": {
+      "file": "data/products.csv",
+      "kind": "seed",
+      "primary_key": [
+        "product_id"
+      ],
+      "description": "소재·부품·완제품·서비스의 공통 품목",
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "품목 고유 ID"
+        },
+        {
+          "name": "product_name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "표준화한 품목 또는 서비스 이름"
+        },
+        {
+          "name": "product_group",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "소재·부품·완제품·서비스 등 상위 품목군"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 대상의 기능·사실·범위에 대한 설명"
+        }
+      ]
+    },
+    "activities": {
+      "file": "data/activities.csv",
+      "kind": "seed",
+      "primary_key": [
+        "activity_id"
+      ],
+      "description": "기업·시설이 생산·소비·연구·판매하는 품목과 소속 산업",
+      "columns": [
+        {
+          "name": "activity_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업·시설 활동의 고유 ID"
+        },
+        {
+          "name": "company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "시설 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "industry_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "산업 고유 ID",
+          "references": {
+            "dataset": "industries",
+            "column": "industry_id"
+          }
+        },
+        {
+          "name": "product_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "품목 고유 ID",
+          "references": {
+            "dataset": "products",
+            "column": "product_id"
+          }
+        },
+        {
+          "name": "activity_role",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업·시설의 역할: 생산·연구·구매·판매 등"
+        },
+        {
+          "name": "record_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "공개 사실·공간 노출·분석 가정 등 관계의 근거 유형"
+        }
+      ]
+    },
+    "statistics": {
+      "file": "data/statistics.csv",
+      "kind": "seed",
+      "primary_key": [
+        "observation_id"
+      ],
+      "description": "고용·임금·GDP·사업장 수·LQ·생산량·생산능력·교역·물류·인프라·가격 등의 수치",
+      "columns": [
+        {
+          "name": "observation_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "수치 관측의 고유 ID"
+        },
+        {
+          "name": "metric_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지표 정의 고유 ID",
+          "references": {
+            "dataset": "metric_definitions",
+            "column": "metric_id"
+          }
+        },
+        {
+          "name": "region_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "지역 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "industry_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "산업 고유 ID",
+          "references": {
+            "dataset": "industries",
+            "column": "industry_id"
+          }
+        },
+        {
+          "name": "company_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기업 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "시설 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "product_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "품목 고유 ID",
+          "references": {
+            "dataset": "products",
+            "column": "product_id"
+          }
+        },
+        {
+          "name": "period",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "원문에서 사용한 기준 기간"
+        },
+        {
+          "name": "value",
+          "type": "REAL",
+          "nullable": true,
+          "description": "수치 관측값. 빈칸은 누락이며 0과 다름"
+        },
+        {
+          "name": "unit",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "수치의 단위. metric_definitions의 단위와 일치"
+        },
+        {
+          "name": "value_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "실적·추정·전망·계획·계산값의 구분"
+        },
+        {
+          "name": "scope_note",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "지역·산업·소유 형태·직접/간접 등 집계 범위"
+        },
+        {
+          "name": "source_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "원문 고유 ID",
+          "references": {
+            "dataset": "sources",
+            "column": "source_id"
+          }
+        },
+        {
+          "name": "period_start",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관측 대상 기간의 시작; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "period_end",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관측 대상 기간의 끝; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "frequency",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "연·분기·월·일 또는 특정 시점의 관측 주기"
+        },
+        {
+          "name": "currency",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "통화 코드 ISO 4217. 예: USD, KRW"
+        },
+        {
+          "name": "price_basis",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "명목가격·실질가격·기준연도 등 가격 기준"
+        },
+        {
+          "name": "base_year",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "실질가격·지수 산정의 기준연도"
+        },
+        {
+          "name": "adjustment",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "통계의 계절조정 또는 기타 보정 여부"
+        },
+        {
+          "name": "ownership_scope",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "민간·정부·전체 등 통계의 사업체 소유 범위"
+        },
+        {
+          "name": "partner_region_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "교역 상대 지역의 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "trade_direction",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수입·수출 방향. 보고 국가를 기준으로 해석"
+        },
+        {
+          "name": "value_status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "관측·비공개·누락·해당 없음 등 수치 상태"
+        },
+        {
+          "name": "lower_bound",
+          "type": "REAL",
+          "nullable": true,
+          "description": "원문 범위값의 하한. 단위는 unit과 동일"
+        },
+        {
+          "name": "upper_bound",
+          "type": "REAL",
+          "nullable": true,
+          "description": "원문 범위값의 상한. 단위는 unit과 동일"
+        },
+        {
+          "name": "record_version_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대상 행의 버전 참조. 빈칸이면 최초 적재 버전"
+        }
+      ]
+    },
+    "projects": {
+      "file": "data/projects.csv",
+      "kind": "seed",
+      "primary_key": [
+        "project_id"
+      ],
+      "description": "신규 공장·시설 증설·현대화·폐쇄 및 전환 사업",
+      "columns": [
+        {
+          "name": "project_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "투자·사업의 고유 ID"
+        },
+        {
+          "name": "company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "시설 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "project_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "신설·증설·인수·연구개발 등 사업 유형"
+        },
+        {
+          "name": "investment_value",
+          "type": "REAL",
+          "nullable": true,
+          "description": "발표 또는 집행된 투자 금액. currency와 단계 설명 필수"
+        },
+        {
+          "name": "currency",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "통화 코드 ISO 4217. 예: USD, KRW"
+        },
+        {
+          "name": "announced_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기관·기업이 발표한 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "construction_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "착공 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "target_operation_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "발표된 목표 가동 시점. 실제 가동일과 구분; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "project_stage",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "발표·착공·설치·가동 등 개별 사업 진행 단계"
+        }
+      ]
+    },
+    "relationships": {
+      "file": "data/relationships.csv",
+      "kind": "seed",
+      "primary_key": [
+        "relationship_id"
+      ],
+      "description": "공급·구매·공동개발·지분투자·합작·인수 등 기업 간 관계",
+      "columns": [
+        {
+          "name": "relationship_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 관계의 고유 ID"
+        },
+        {
+          "name": "from_company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "관계 출발 기업의 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "to_company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "관계 도착 기업의 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "relationship_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "공급·구매·공동개발·투자·인수 등 기업 관계"
+        },
+        {
+          "name": "product_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "품목 고유 ID",
+          "references": {
+            "dataset": "products",
+            "column": "product_id"
+          }
+        },
+        {
+          "name": "from_facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계 출발 시설의 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "to_facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계 도착 시설의 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "valid_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "valid_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "record_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "공개 사실·공간 노출·분석 가정 등 관계의 근거 유형"
+        }
+      ]
+    },
+    "routes": {
+      "file": "data/routes.csv",
+      "kind": "seed",
+      "primary_key": [
+        "route_id"
+      ],
+      "description": "생산지·시설·항만·공항·한국 등을 잇는 운송 경로",
+      "columns": [
+        {
+          "name": "route_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "운송 경로의 고유 ID"
+        },
+        {
+          "name": "route_name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사용자 화면에 표시할 운송 경로 이름"
+        },
+        {
+          "name": "origin_region_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "출발 지역의 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "destination_region_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "도착 지역의 고유 ID",
+          "references": {
+            "dataset": "regions",
+            "column": "region_id"
+          }
+        },
+        {
+          "name": "origin_facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "출발 시설의 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "destination_facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "도착 시설의 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "route_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "일반 연결·공개 서비스·실제 이용·대체 제안의 구분"
+        },
+        {
+          "name": "valid_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "valid_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "route_segments": {
+      "file": "data/route_segments.csv",
+      "kind": "seed",
+      "primary_key": [
+        "segment_id"
+      ],
+      "description": "운송 경로의 순서별 해상·철도·도로·항공 구간",
+      "columns": [
+        {
+          "name": "segment_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "운송 구간의 고유 ID"
+        },
+        {
+          "name": "route_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "운송 경로의 고유 ID",
+          "references": {
+            "dataset": "routes",
+            "column": "route_id"
+          }
+        },
+        {
+          "name": "sequence",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "운송 경로 안에서의 구간 순번. 동일 경로 내 중복 금지"
+        },
+        {
+          "name": "origin_facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "출발 시설의 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "destination_facility_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "도착 시설의 고유 ID",
+          "references": {
+            "dataset": "facilities",
+            "column": "facility_id"
+          }
+        },
+        {
+          "name": "transport_mode",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "road, rail, sea, air 등 운송 수단"
+        },
+        {
+          "name": "corridor_name",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "운송 구간의 도로·철도·항로 이름"
+        },
+        {
+          "name": "geometry_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "공간 파일의 feature ID"
+        }
+      ]
+    },
+    "risk_profiles": {
+      "file": "data/risk_profiles.csv",
+      "kind": "seed",
+      "primary_key": [
+        "risk_profile_id"
+      ],
+      "description": "장기 자연재해 노출·전력 및 용수 의존·냉장 조건·공급 집중 등 구조적 위험",
+      "columns": [
+        {
+          "name": "risk_profile_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "구조적 위험 특성의 고유 ID"
+        },
+        {
+          "name": "target_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 테이블 이름"
+        },
+        {
+          "name": "target_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 행의 고유 ID"
+        },
+        {
+          "name": "risk_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "자연재해·물류·전력·수요·거래·규제 등 위험 유형"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 대상의 기능·사실·범위에 대한 설명"
+        },
+        {
+          "name": "metric_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "지표 정의 고유 ID",
+          "references": {
+            "dataset": "metric_definitions",
+            "column": "metric_id"
+          }
+        },
+        {
+          "name": "assessment_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "발표된 사실·노출·추론의 구분"
+        },
+        {
+          "name": "reference_period",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "위험 특성이 측정·평가된 기준 기간"
+        }
+      ]
+    },
+    "events": {
+      "file": "data/events.csv",
+      "kind": "seed",
+      "primary_key": [
+        "event_id"
+      ],
+      "description": "재난·파업·운항 중단·공장 운영 변화·기업 동향 등 실제 사건",
+      "columns": [
+        {
+          "name": "event_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사건의 고유 ID"
+        },
+        {
+          "name": "event_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "재난·파업·물류차질·기업 운영 변화 등 사건 유형"
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "자료·사건·조치의 제목"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 대상의 기능·사실·범위에 대한 설명"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실제 사건 발생 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "announced_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기관·기업이 발표한 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "ended_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실제 사건 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "event_status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사건의 진행 상태. 과거 사건은 종료·보관 상태로 표시"
+        },
+        {
+          "name": "location_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사건 위치의 region_id 또는 설명. 좌표로 임의 변환 금지"
+        },
+        {
+          "name": "external_event_key",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원 발행기관의 사건 ID. 중복 병합에 사용"
+        },
+        {
+          "name": "last_seen_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원문에서 사건 상태를 마지막으로 관측한 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "expires_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "geometry_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "공간 파일의 feature ID"
+        },
+        {
+          "name": "severity_basis",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사건 심각도를 설명하는 원문 기준. 임의 피해액 생성 금지"
+        },
+        {
+          "name": "is_replay",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "과거 사건 재연 여부: 0 일반, 1 재연",
+          "allowed_values": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "event_impacts": {
+      "file": "data/event_impacts.csv",
+      "kind": "seed",
+      "primary_key": [
+        "impact_id"
+      ],
+      "description": "사건과 관련된 기업·시설·품목·운송구간 및 영향 경로",
+      "columns": [
+        {
+          "name": "impact_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사건 영향의 고유 ID"
+        },
+        {
+          "name": "event_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사건의 고유 ID",
+          "references": {
+            "dataset": "events",
+            "column": "event_id"
+          }
+        },
+        {
+          "name": "target_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 테이블 이름"
+        },
+        {
+          "name": "target_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 행의 고유 ID"
+        },
+        {
+          "name": "impact_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "중단·지연·비용 상승·노출 등 영향의 종류"
+        },
+        {
+          "name": "impact_description",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사건에서 대상까지 이어지는 구체적인 영향 경로"
+        },
+        {
+          "name": "assessment_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "발표된 사실·노출·추론의 구분"
+        },
+        {
+          "name": "relationship_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기업 관계의 고유 ID",
+          "references": {
+            "dataset": "relationships",
+            "column": "relationship_id"
+          }
+        },
+        {
+          "name": "analysis_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "분석 실행의 고유 ID",
+          "references": {
+            "dataset": "analysis_runs",
+            "column": "analysis_id"
+          }
+        },
+        {
+          "name": "regulation_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "규제·조치의 고유 ID",
+          "references": {
+            "dataset": "regulations",
+            "column": "regulation_id"
+          }
+        },
+        {
+          "name": "assessment_status",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "영향 평가의 작성·검토 상태"
+        },
+        {
+          "name": "input_version_refs",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "영향 평가에 사용한 입력 기록 버전 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "review_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "검토 기록의 고유 ID",
+          "references": {
+            "dataset": "review_history",
+            "column": "review_id"
+          }
+        }
+      ]
+    },
+    "regulations": {
+      "file": "data/regulations.csv",
+      "kind": "seed",
+      "primary_key": [
+        "regulation_id"
+      ],
+      "description": "관세·수출통제·검역·환경·산업 관련 규제 조치",
+      "columns": [
+        {
+          "name": "regulation_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "규제·조치의 고유 ID"
+        },
+        {
+          "name": "authority",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "규제·조치의 발행 권한을 가진 기관"
+        },
+        {
+          "name": "jurisdiction",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "조치가 시행되는 법적 관할권"
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "자료·사건·조치의 제목"
+        },
+        {
+          "name": "document_number",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "규제·조치의 공식 문서번호"
+        },
+        {
+          "name": "published_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "발행 시점. 원문의 날짜 정밀도 보존; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "effective_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "조치 시행 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "expires_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 작업·보고서·조치의 처리 상태. 테이블별 의미로 해석"
+        },
+        {
+          "name": "supersedes_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대체되는 이전 조치의 고유 ID",
+          "references": {
+            "dataset": "regulations",
+            "column": "regulation_id"
+          }
+        }
+      ]
+    },
+    "response_options": {
+      "file": "data/response_options.csv",
+      "kind": "seed",
+      "primary_key": [
+        "response_id"
+      ],
+      "description": "대체 공급·운송·재고·계약·인증 등 대응과 과거 실행 사례",
+      "columns": [
+        {
+          "name": "response_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "대응 선택지의 고유 ID"
+        },
+        {
+          "name": "risk_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "자연재해·물류·전력·수요·거래·규제 등 위험 유형"
+        },
+        {
+          "name": "industry_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "산업 고유 ID",
+          "references": {
+            "dataset": "industries",
+            "column": "industry_id"
+          }
+        },
+        {
+          "name": "product_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "품목 고유 ID",
+          "references": {
+            "dataset": "products",
+            "column": "product_id"
+          }
+        },
+        {
+          "name": "action",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "담당자가 실행할 수 있는 구체적인 대응 행동"
+        },
+        {
+          "name": "prerequisites",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대응을 실행하기 전에 충족해야 하는 조건"
+        },
+        {
+          "name": "constraints",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대응 또는 기업 운영에 적용되는 제약"
+        },
+        {
+          "name": "case_event_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대응 사례가 된 사건의 고유 ID",
+          "references": {
+            "dataset": "events",
+            "column": "event_id"
+          }
+        },
+        {
+          "name": "response_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "대응의 근거: 과거 사례·기관 지침·분석 제안"
+        }
+      ]
+    },
+    "sources": {
+      "file": "data/sources.csv",
+      "kind": "seed",
+      "primary_key": [
+        "source_id"
+      ],
+      "description": "사용한 데이터셋·보고서·공시·기사·웹페이지의 서지와 접근 정보",
+      "columns": [
+        {
+          "name": "source_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "원문 고유 ID"
+        },
+        {
+          "name": "publisher",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 페이지 또는 자료의 발행기관"
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "자료·사건·조치의 제목"
+        },
+        {
+          "name": "source_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "정부·공공기관·연구기관·협회·기업·언론 등 자료 유형"
+        },
+        {
+          "name": "url",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "원문으로 돌아갈 수 있는 웹 주소"
+        },
+        {
+          "name": "local_document_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "보관된 문서 파일의 프로젝트 내 상대 경로"
+        },
+        {
+          "name": "published_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "발행 시점. 원문의 날짜 정밀도 보존; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "retrieved_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실제 자료를 가져온 시점. ISO 8601; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "version",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "개정판 또는 정수 버전"
+        },
+        {
+          "name": "access_note",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "로그인·유료 여부·접근 제한과 대체 경로"
+        },
+        {
+          "name": "original_publisher",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "자료를 최초 생산한 기관. 재게시 기관과 구분"
+        },
+        {
+          "name": "collection_source_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수집 설정의 고유 ID",
+          "references": {
+            "dataset": "collection_sources",
+            "column": "collection_source_id"
+          }
+        },
+        {
+          "name": "license_note",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원자료의 이용·보관·재배포 조건"
+        },
+        {
+          "name": "content_hash",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "보관 파일 또는 추출 본문의 SHA-256"
+        },
+        {
+          "name": "access_status",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원문 접근 결과. 성공·차단·삭제·수동 수집을 구분"
+        },
+        {
+          "name": "local_snapshot_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "보관된 원문 상대 경로"
+        }
+      ]
+    },
+    "evidence": {
+      "file": "data/evidence.csv",
+      "kind": "seed",
+      "primary_key": [
+        "evidence_id"
+      ],
+      "description": "수치·시설 기능·거래·사건·분석에 연결된 근거",
+      "columns": [
+        {
+          "name": "evidence_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "근거 고유 ID"
+        },
+        {
+          "name": "record_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 테이블 이름"
+        },
+        {
+          "name": "record_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 행의 고유 ID"
+        },
+        {
+          "name": "field_name",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "근거가 뒷받침하는 대상 열. 행 전체이면 빈칸"
+        },
+        {
+          "name": "source_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "원문 고유 ID",
+          "references": {
+            "dataset": "sources",
+            "column": "source_id"
+          }
+        },
+        {
+          "name": "locator",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "페이지·표·절·문단 또는 원문 내 검색어"
+        },
+        {
+          "name": "excerpt",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "근거의 짧은 요약 또는 허용 범위 내 인용"
+        },
+        {
+          "name": "support_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "직접 뒷받침·의역·맥락·추론 등 원문과 기록의 관계"
+        },
+        {
+          "name": "extraction_method",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수동 대조·API 파싱·모델 추출 등 자료 추출 방식"
+        },
+        {
+          "name": "source_version_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원문 버전 식별자; source_id와 함께 해석"
+        },
+        {
+          "name": "record_version_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대상 행의 버전 참조. 빈칸이면 최초 적재 버전"
+        },
+        {
+          "name": "review_status",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "데이터 근거의 검토 상태"
+        },
+        {
+          "name": "reviewed_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "담당자가 검토한 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "metric_definitions": {
+      "file": "data/metric_definitions.csv",
+      "kind": "seed",
+      "primary_key": [
+        "metric_id"
+      ],
+      "description": "수치 지표의 정의·단위·집계 및 비교 규칙",
+      "columns": [
+        {
+          "name": "metric_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지표 정의 고유 ID"
+        },
+        {
+          "name": "metric_name",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사용자 화면에 표시할 지표 이름"
+        },
+        {
+          "name": "definition",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 산업·지표가 포함하는 범위와 정의"
+        },
+        {
+          "name": "default_unit",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지표의 기본 단위. 관측 단위가 다르면 명시적 변환 필요"
+        },
+        {
+          "name": "aggregation_rule",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "합계·가중평균·비가산 등 지표 합산 규칙"
+        },
+        {
+          "name": "comparison_conditions",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수치를 비교할 때 맞춰야 하는 기간·범위·기준"
+        },
+        {
+          "name": "required_dimensions",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관측마다 필요한 지역·산업·시설·품목 등 차원"
+        },
+        {
+          "name": "source_definition",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "지표 정의를 제공하는 기관·자료 또는 링크"
+        },
+        {
+          "name": "denominator",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "비율·LQ 계산에 사용되는 분모 또는 기준 집단"
+        },
+        {
+          "name": "aggregation_level",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "집계 수준: 국가·주·카운티·기업·시설 등"
+        }
+      ]
+    },
+    "classification_mappings": {
+      "file": "data/classification_mappings.csv",
+      "kind": "seed",
+      "primary_key": [
+        "mapping_id"
+      ],
+      "description": "산업·품목과 NAICS·HS·HTS·ECCN 등 코드의 연결",
+      "columns": [
+        {
+          "name": "mapping_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분류 코드 대응의 고유 ID"
+        },
+        {
+          "name": "target_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 테이블 이름"
+        },
+        {
+          "name": "target_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 행의 고유 ID"
+        },
+        {
+          "name": "code_system",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "NAICS, HS, HTS, ECCN 등 분류체계"
+        },
+        {
+          "name": "code_version",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분류체계 개정판. 서로 다른 판을 혼합하지 않음"
+        },
+        {
+          "name": "code",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분류체계의 코드 문자열. 앞자리 0 유지",
+          "format": "code_string"
+        },
+        {
+          "name": "mapping_scope",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "정확한 일치·일부 포함·분석상 대응 등 코드 연결 범위"
+        },
+        {
+          "name": "source_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "원문 고유 ID",
+          "references": {
+            "dataset": "sources",
+            "column": "source_id"
+          }
+        }
+      ]
+    },
+    "relationship_routes": {
+      "file": "data/relationship_routes.csv",
+      "kind": "seed",
+      "primary_key": [
+        "link_id"
+      ],
+      "description": "실제 거래·공급 관계와 운송 경로의 연결",
+      "columns": [
+        {
+          "name": "link_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 행의 고유 ID"
+        },
+        {
+          "name": "relationship_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 관계의 고유 ID",
+          "references": {
+            "dataset": "relationships",
+            "column": "relationship_id"
+          }
+        },
+        {
+          "name": "route_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "운송 경로의 고유 ID",
+          "references": {
+            "dataset": "routes",
+            "column": "route_id"
+          }
+        },
+        {
+          "name": "product_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "품목 고유 ID",
+          "references": {
+            "dataset": "products",
+            "column": "product_id"
+          }
+        },
+        {
+          "name": "route_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "일반 연결·공개 서비스·실제 이용·대체 제안의 구분"
+        },
+        {
+          "name": "valid_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "valid_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "regulation_scopes": {
+      "file": "data/regulation_scopes.csv",
+      "kind": "seed",
+      "primary_key": [
+        "scope_id"
+      ],
+      "description": "규제별 대상 품목·국가·세율·예외·적용 조건",
+      "columns": [
+        {
+          "name": "scope_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "규제 적용 범위의 고유 ID"
+        },
+        {
+          "name": "regulation_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "규제·조치의 고유 ID",
+          "references": {
+            "dataset": "regulations",
+            "column": "regulation_id"
+          }
+        },
+        {
+          "name": "code_system",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "NAICS, HS, HTS, ECCN 등 분류체계"
+        },
+        {
+          "name": "code_version",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분류체계 개정판. 서로 다른 판을 혼합하지 않음"
+        },
+        {
+          "name": "product_code",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "조치 적용 품목의 코드 문자열. 체계·개정판과 함께 해석",
+          "format": "code_string"
+        },
+        {
+          "name": "origin_country",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "원산 국가 코드 ISO 3166-1 alpha-2"
+        },
+        {
+          "name": "destination_country",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "목적 국가 코드 ISO 3166-1 alpha-2"
+        },
+        {
+          "name": "rate_value",
+          "type": "REAL",
+          "nullable": true,
+          "description": "해당 조치의 세율 또는 수량 한도"
+        },
+        {
+          "name": "rate_unit",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "규제 세율·수량 제한의 단위. percent 등"
+        },
+        {
+          "name": "conditions",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 조치·세율이 적용되는 예외와 조건"
+        },
+        {
+          "name": "effective_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 적용 조건의 시행 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "effective_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "해당 적용 조건의 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "evaluation_cases": {
+      "file": "data/evaluation_cases.csv",
+      "kind": "seed",
+      "primary_key": [
+        "case_id"
+      ],
+      "description": "AI와 위험 연결 기능을 시험할 시나리오",
+      "columns": [
+        {
+          "name": "case_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "평가 사례의 고유 ID"
+        },
+        {
+          "name": "question",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "시연·검증에서 사용자에게 입력받는 질문"
+        },
+        {
+          "name": "input_ids",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "평가 입력으로 사용할 기업·사건 등의 ID 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "expected_entity_ids",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "평가에서 찾아야 하는 기업·시설 등 ID 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "required_evidence_ids",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "평가 결과에 반드시 포함되어야 하는 근거 ID 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "expected_findings",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "평가 시 반환되어야 하는 핵심 결과"
+        },
+        {
+          "name": "forbidden_claims",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "평가 결과에서 생성하면 안 되는 단정·허위 연결"
+        }
+      ]
+    },
+    "region_industries": {
+      "file": "data/region_industries.csv",
+      "kind": "seed",
+      "primary_key": [
+        "region_id",
+        "industry_id"
+      ],
+      "description": "지역별 우선산업·조사 범위·산업 역할·요약",
+      "columns": [
+        {
+          "name": "region_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지역 고유 ID"
+        },
+        {
+          "name": "industry_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "산업 고유 ID"
+        },
+        {
+          "name": "coverage_status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "지역·산업의 수록 범위: 조사 완료·부분 수록·범위 외 등"
+        },
+        {
+          "name": "role_summary",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 지역이 산업에서 담당하는 기능과 핵심 설명"
+        },
+        {
+          "name": "is_priority",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "과제상 우선 조사 산업 여부: 0 아니오, 1 예",
+          "allowed_values": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "evidence_refs",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "현재 기록을 지지하는 evidence_id 목록; JSON 배열 또는 객체",
+          "format": "json"
+        }
+      ]
+    },
+    "collection_sources": {
+      "file": "data/collection_sources.csv",
+      "kind": "seed",
+      "primary_key": [
+        "collection_source_id"
+      ],
+      "description": "외부 자료의 수집 경로·갱신·오류 대응 설정",
+      "columns": [
+        {
+          "name": "collection_source_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "수집 설정의 고유 ID"
+        },
+        {
+          "name": "publisher",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 페이지 또는 자료의 발행기관"
+        },
+        {
+          "name": "access_method",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "자료 접근 방식: api, http, file, manual 등"
+        },
+        {
+          "name": "endpoint_or_url",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "수집할 API 주소 또는 파일·페이지 URL"
+        },
+        {
+          "name": "adapter_key",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "실행할 수집 어댑터의 등록 이름"
+        },
+        {
+          "name": "query_config_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수집 조건 파일의 상대 경로 또는 조건 식별자"
+        },
+        {
+          "name": "refresh_policy",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "갱신 주기와 실제 수행 방식. 수동·일별·주별 등"
+        },
+        {
+          "name": "enabled",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "자동 수집 활성화: 0 비활성, 1 활성",
+          "allowed_values": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "credentials_env_name",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "접근 자격증명이 들어 있는 환경변수 이름. 실제 키 저장 금지"
+        },
+        {
+          "name": "availability_note",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수집 가능 여부와 접근 실패 사유"
+        }
+      ]
+    },
+    "company_contexts": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "context_id"
+      ],
+      "description": "이번에 지원하는 한국 기업의 조건",
+      "columns": [
+        {
+          "name": "context_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 조건의 고유 ID"
+        },
+        {
+          "name": "company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "product_ids",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기업 조건에 포함된 product_id 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "trade_role",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "한국 기업의 수출·수입·현지 생산 등 역할"
+        },
+        {
+          "name": "target_markets",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기업이 고려하는 대상 국가·권역; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "known_relationship_ids",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "공개자료 또는 담당자 입력으로 알려진 거래 ID 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "known_route_ids",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실제 이용 사실이 알려진 운송 경로 ID 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "constraints",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "대응 또는 기업 운영에 적용되는 제약; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "input_basis",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 조건의 근거: 공개자료·담당자 입력·가상 시연값"
+        },
+        {
+          "name": "visibility",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "공개 또는 제한된 자료의 접근 범위"
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "개정판 또는 정수 버전"
+        }
+      ]
+    },
+    "watchlists": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "watchlist_id"
+      ],
+      "description": "사용자 또는 분석 업무에서 관심을 두는 대상",
+      "columns": [
+        {
+          "name": "watchlist_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "관심 목록의 고유 ID"
+        },
+        {
+          "name": "owner_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관심 목록 소유 사용자의 고유 ID",
+          "references": {
+            "dataset": "users_roles",
+            "column": "user_id"
+          }
+        },
+        {
+          "name": "target_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 테이블 이름"
+        },
+        {
+          "name": "target_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 행의 고유 ID"
+        },
+        {
+          "name": "filters",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관심 대상에 적용할 지역·산업·기간 필터; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "시스템 기록 생성 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "alerts": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "alert_id"
+      ],
+      "description": "관련 사건·규제 알림과 사용자 처리 상태",
+      "columns": [
+        {
+          "name": "alert_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "알림의 고유 ID"
+        },
+        {
+          "name": "event_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사건의 고유 ID",
+          "references": {
+            "dataset": "events",
+            "column": "event_id"
+          }
+        },
+        {
+          "name": "regulation_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "규제·조치의 고유 ID",
+          "references": {
+            "dataset": "regulations",
+            "column": "regulation_id"
+          }
+        },
+        {
+          "name": "watchlist_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "관심 목록의 고유 ID",
+          "references": {
+            "dataset": "watchlists",
+            "column": "watchlist_id"
+          }
+        },
+        {
+          "name": "priority_reason",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "알림 우선순위를 부여한 근거와 해당 규칙"
+        },
+        {
+          "name": "read_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사용자가 읽은 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "dismissed_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사용자가 알림을 닫은 시점; 사건 종료와 무관; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "snoozed_until",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "알림을 다시 표시할 시점"
+        },
+        {
+          "name": "dedupe_key",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "동일 대상·사건의 중복 알림 생성을 막는 고유키"
+        },
+        {
+          "name": "expires_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "analysis_runs": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "analysis_id"
+      ],
+      "description": "AI 실행과 입력·출력·실패 기록",
+      "columns": [
+        {
+          "name": "analysis_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분석 실행의 고유 ID"
+        },
+        {
+          "name": "case_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "분석에 사용한 evaluation_cases.case_id 또는 별도 사건 맥락"
+        },
+        {
+          "name": "context_version",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "분석 당시 기업 조건의 버전 번호"
+        },
+        {
+          "name": "input_record_versions",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "분석에 투입한 원본 기록의 테이블·ID·버전; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "source_versions",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "분석에 사용한 source_id별 원문 버전 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "model_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실행에 사용한 모델 또는 규칙 기반 엔진 이름"
+        },
+        {
+          "name": "prompt_version",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "분석에 사용한 프롬프트 버전"
+        },
+        {
+          "name": "schema_version",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실행 결과 JSON 계약의 버전"
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 작업·보고서·조치의 처리 상태. 테이블별 의미로 해석"
+        },
+        {
+          "name": "result",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "분석 실행 결과. 결과 JSON 계약에 맞춰 저장; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "시스템 기록 생성 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "error",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실패 사유; 키·토큰 등 비밀정보 제외"
+        }
+      ]
+    },
+    "review_history": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "review_id"
+      ],
+      "description": "담당자의 분석 수정·검토·승인 이력",
+      "columns": [
+        {
+          "name": "review_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "검토 기록의 고유 ID"
+        },
+        {
+          "name": "analysis_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분석 실행의 고유 ID",
+          "references": {
+            "dataset": "analysis_runs",
+            "column": "analysis_id"
+          }
+        },
+        {
+          "name": "report_version",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "검토한 보고서의 정수 버전"
+        },
+        {
+          "name": "reviewer_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "검토 사용자의 고유 ID",
+          "references": {
+            "dataset": "users_roles",
+            "column": "user_id"
+          }
+        },
+        {
+          "name": "decision",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "검토 결과: approve, reject, request_changes 등 서버에서 정의한 값"
+        },
+        {
+          "name": "edited_content",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "검토자가 수정한 본문. 수정 후 검토 상태 재설정"
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "담당자 검토 결정의 이유"
+        },
+        {
+          "name": "reviewed_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "담당자가 검토한 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "reports": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "report_id"
+      ],
+      "description": "기업별 보고서와 수정·내보내기 버전",
+      "columns": [
+        {
+          "name": "report_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "보고서의 고유 ID"
+        },
+        {
+          "name": "company_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "기업 고유 ID",
+          "references": {
+            "dataset": "companies",
+            "column": "company_id"
+          }
+        },
+        {
+          "name": "analysis_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "분석 실행의 고유 ID",
+          "references": {
+            "dataset": "analysis_runs",
+            "column": "analysis_id"
+          }
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "개정판 또는 정수 버전"
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "저장할 보고서 본문"
+        },
+        {
+          "name": "evidence_refs",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "현재 기록을 지지하는 evidence_id 목록; JSON 배열 또는 객체",
+          "format": "json"
+        },
+        {
+          "name": "review_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "검토 기록의 고유 ID",
+          "references": {
+            "dataset": "review_history",
+            "column": "review_id"
+          }
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 작업·보고서·조치의 처리 상태. 테이블별 의미로 해석"
+        },
+        {
+          "name": "export_file_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "내보낸 보고서 파일의 상대 경로"
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "시스템 기록 생성 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        }
+      ]
+    },
+    "ingestion_runs": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "run_id"
+      ],
+      "description": "수집·CSV 가져오기·갱신 작업의 결과",
+      "columns": [
+        {
+          "name": "run_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "수집 실행의 고유 ID"
+        },
+        {
+          "name": "collection_source_id",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수집 설정의 고유 ID",
+          "references": {
+            "dataset": "collection_sources",
+            "column": "collection_source_id"
+          }
+        },
+        {
+          "name": "started_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "수집 실행 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "finished_at",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "수집 실행 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "cursor",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "증분 수집을 다시 시작할 위치나 다음 페이지 토큰"
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "해당 작업·보고서·조치의 처리 상태. 테이블별 의미로 해석"
+        },
+        {
+          "name": "new_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "추가된 행 수"
+        },
+        {
+          "name": "updated_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "수정된 행 수"
+        },
+        {
+          "name": "rejected_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "description": "적재에서 제외된 행 수"
+        },
+        {
+          "name": "error_ref",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "실패 로그의 상대 경로 또는 오류 식별자"
+        }
+      ]
+    },
+    "record_versions": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "record_type",
+        "record_id",
+        "version"
+      ],
+      "description": "핵심 사실의 변경·개정·병합·검토 이력",
+      "columns": [
+        {
+          "name": "record_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 테이블 이름"
+        },
+        {
+          "name": "record_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "연결 대상 행의 고유 ID"
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "개정판 또는 정수 버전"
+        },
+        {
+          "name": "valid_from",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 시작 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "valid_to",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "관계·소유·구역 연결의 유효 종료 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "recorded_at",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "변경 이력을 DB에 기록한 시점; 확인된 정밀도(연·월·일)를 보존",
+          "format": "iso_date_or_datetime"
+        },
+        {
+          "name": "source_version",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "기록 변경을 뒷받침하는 원문 버전"
+        },
+        {
+          "name": "change_type",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "추가·수정·삭제 등 기록 변경 유형"
+        },
+        {
+          "name": "changed_by",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "변경한 사용자 또는 수집기 식별자"
+        }
+      ]
+    },
+    "users_roles": {
+      "file": null,
+      "kind": "runtime",
+      "primary_key": [
+        "user_id"
+      ],
+      "description": "직원 계정과 접근 권한",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사용자의 고유 ID"
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "사용자 역할: reader, analyst, reviewer, admin 등"
+        },
+        {
+          "name": "organization_scope",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "사용자에게 허용된 조직 또는 업무 범위"
+        },
+        {
+          "name": "active",
+          "type": "INTEGER",
+          "nullable": false,
+          "description": "계정 활성 여부: 0 비활성, 1 활성",
+          "allowed_values": [
+            0,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "polymorphic_references": [
+    {
+      "dataset": "evidence",
+      "type_column": "record_type",
+      "id_column": "record_id",
+      "target_aliases_allowed": true
+    },
+    {
+      "dataset": "risk_profiles",
+      "type_column": "target_type",
+      "id_column": "target_id",
+      "target_aliases_allowed": true
+    },
+    {
+      "dataset": "event_impacts",
+      "type_column": "target_type",
+      "id_column": "target_id",
+      "target_aliases_allowed": true
+    },
+    {
+      "dataset": "classification_mappings",
+      "type_column": "target_type",
+      "id_column": "target_id",
+      "target_aliases_allowed": true
+    },
+    {
+      "dataset": "watchlists",
+      "type_column": "target_type",
+      "id_column": "target_id",
+      "target_aliases_allowed": true
+    },
+    {
+      "dataset": "record_versions",
+      "type_column": "record_type",
+      "id_column": "record_id",
+      "target_aliases_allowed": true
+    }
+  ],
+  "object_type_aliases": {
+    "region": "regions",
+    "region_membership": "region_memberships",
+    "industrie": "industries",
+    "companie": "companies",
+    "facilitie": "facilities",
+    "product": "products",
+    "activitie": "activities",
+    "statistic": "statistics",
+    "project": "projects",
+    "relationship": "relationships",
+    "route": "routes",
+    "route_segment": "route_segments",
+    "risk_profile": "risk_profiles",
+    "event": "events",
+    "event_impact": "event_impacts",
+    "regulation": "regulations",
+    "response_option": "response_options",
+    "source": "sources",
+    "evidence": "evidence",
+    "metric_definition": "metric_definitions",
+    "classification_mapping": "classification_mappings",
+    "relationship_route": "relationship_routes",
+    "regulation_scope": "regulation_scopes",
+    "evaluation_case": "evaluation_cases",
+    "collection_source": "collection_sources",
+    "company_context": "company_contexts",
+    "watchlist": "watchlists",
+    "alert": "alerts",
+    "analysis_run": "analysis_runs",
+    "review_history": "review_history",
+    "report": "reports",
+    "ingestion_run": "ingestion_runs",
+    "users_role": "users_roles",
+    "company": "companies",
+    "industry": "industries",
+    "facility": "facilities",
+    "activity": "activities",
+    "observation": "statistics"
+  }
+}

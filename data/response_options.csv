@@ -1,0 +1,15 @@
+﻿response_id,risk_type,industry_id,product_id,action,prerequisites,constraints,case_event_id,response_basis
+RESP-RISK-001,labor_dispute,IND-AERO,,고객의 생산·인수 일정과 주문 변경 내역을 대조하고 부품 출하를 단계별로 조정,실제 고객·주문서·계약상 인도 조건,임의 출하 중단은 계약·보관비 영향을 검토,EVT-RISK-STRIKE,analyst_guidance
+RESP-RISK-002,quality_regulatory,IND-AERO,,해당 기종·부품의 검사 요건과 고객 승인 상태를 연결해 납기 계획을 수정,대상 품목·도면·검사 증빙,비대상 부품·항공기로 조치를 확대하지 않음,EVT-RISK-MAX,analyst_guidance
+RESP-RISK-003,coastal_storm,IND-LOGISTICS,,출발·도착 터미널과 실제 영향 구역을 대조하고 운항사 공지에 따라 대체 편을 조회,부킹·출하 일정·터미널 위치,공개 서비스 존재가 대체 용량 확보를 보장하지 않음,EVT-RISK-MERBOK,analyst_guidance
+RESP-RISK-004,flood,IND-MINING,,실제 반출 도로·철도 구간을 점검하고 우회 경로의 중량·통행 제한을 대조,실제 운송 경로·차량 규격,지역 홍수만으로 광산 가동 중단을 단정하지 않음,EVT-RISK-IDFLOOD,analyst_guidance
+RESP-RISK-005,wildfire,IND-FOREST,,산림 출입 제한·도로 복구·원목 확보 계획을 거래처와 맞추고 대체 공급 지역을 검토,산림 소유·조달 계약·품질 규격,피해목과 정상 원목의 품질·가격·인증 차이,EVT-RISK-ORFIRES,analyst_guidance
+RESP-RISK-006,heatwave,IND-SEMI,,사업장 용수·전력 공급 공지와 공정 중단 대응 절차를 연결,사업장 운영 자료·공정별 허용 중단시간,기온 기록만으로 팹 중단·수율 손실 계산 금지,EVT-RISK-PNWHEAT,analyst_guidance
+RESP-RISK-007,earthquake,IND-MFG,,시설·운송 거점의 점검 결과를 모아 출하·재가동 순서를 조정,시설 안전 점검·실제 운송 상황,지진 규모만으로 개별 시설 피해를 추정하지 않음,EVT-RISK-AKQUAKE,analyst_guidance
+RESP-RISK-008,cyber_supply_chain,IND-ICT,,주요 공급자의 구성요소 출처·취약점 대응·대체 공급 가능성을 정리,공급자·제품·소프트웨어 구성요소 목록,비공개 보안 정보를 공개 데이터와 혼합하지 않음,,analyst_guidance
+RESP-RISK-009,cyber_supply_chain,IND-PHOTO,,광학 장비에 포함된 전자·소프트웨어 구성요소의 공급자와 버전 추적,부품명세서·공급자 문서,대체 부품의 광학 성능·검교정 차이,,analyst_guidance
+RESP-RISK-010,water_energy,IND-BIO,,전력·용수 공지와 생산 배치·저장 조건을 연결해 운영 대응안을 작성,공정·품질관리·저장조건 자료,품질 보증 승인 없이 배치 사용·대체 원료 결정 금지,,analyst_guidance
+RESP-RISK-011,infrastructure,IND-OIL,,저장·운송 거점의 실제 운영 공지와 계약상 인도 일정을 대조,설비·배관·운송 계약 자료,주 단위 사건을 모든 설비에 일괄 적용하지 않음,,analyst_guidance
+RESP-RISK-012,infrastructure,IND-POWER,,위험 구역과 실제 발전·송전 설비를 대조하고 운영기관 정전 공지를 조회,설비 위치·계통 운영 공지,위치 노출과 실제 공급 중단을 구분,,analyst_guidance
+RESP-RISK-013,traceability,IND-FOOD,,취급 식품의 적용 범위와 추적 로트·거래 단계별 기록 체계를 정리,품목·공급자·거래 단계·적용 예외,준수일 제안과 실제 집행 유예를 구분하고 최신 공지 반영,,analyst_guidance
+RESP-RISK-014,climate_resource,IND-FISH,,어종·어장·시즌·할당량 변화를 조달 계약과 대조하고 대체 어종의 규격을 검토,실제 어종·어장·조달 계약,어종 변경 시 원산지·품질·표시·고객 승인 조건,,analyst_guidance

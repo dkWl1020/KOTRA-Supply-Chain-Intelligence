@@ -1,0 +1,4 @@
+﻿project_id,company_id,facility_id,project_type,investment_value,currency,announced_at,construction_at,target_operation_at,project_stage
+PROJ-CORE-LONZA,CO-LONZA,FAC-LONZA-VACAVILLE,completed_asset_acquisition,1200000000,USD,2024-10-01,,,completed
+PROJ-CORE-MICRON-ID,CO-MICRON,,historical_investment_plan,25000000000,USD,2024-12-10,,,2024_announced_plan
+PROJ-CORE-INTEL-OR,CO-INTEL,,historical_expansion_plan,36000000000,USD,2024-03-20,,,2024_announced_plan

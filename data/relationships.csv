@@ -1,0 +1,11 @@
+﻿relationship_id,from_company_id,to_company_id,relationship_type,product_id,from_facility_id,to_facility_id,valid_from,valid_to,record_basis
+REL-CORE-001,CO-SKHYNIX,CO-NVIDIA,supply_codevelopment,PRD-DRAM,,,2026-06-07,,reported_fact
+REL-CORE-002,CO-KAI,CO-BOEING,supply,PRD-AERO,,,,,reported_fact
+REL-CORE-003,CO-BOEING,CO-KOREANAIR,aircraft_order,PRD-AIRCRAFT,,,2026-09-16,,reported_fact
+REL-CORE-004,CO-LONZA,CO-ROCHE,manufacturing_supply,PRD-BIO,FAC-LONZA-VACAVILLE,,2024-03-20,,reported_fact
+REL-CORE-005,CO-LONZA,CO-ROCHE,asset_acquisition,,,,2024-10-01,,reported_fact
+REL-CORE-006,CO-PACIFIC,CO-TRIDENT,asset_acquisition,,,,2024-12-18,,reported_fact
+REL-CORE-007,CO-SILVERBAY,CO-TRIDENT,asset_acquisition,,,,2024-04-24,,reported_fact
+REL-CORE-008,CO-ECPHILLIPS,CO-TRIDENT,asset_acquisition,,,,2024-04-01,,reported_fact
+REL-CORE-009,CO-UEC,CO-AMAZON,electricity_supply,PRD-POWER,,,,,reported_fact
+REL-CORE-010,CO-LAMBWESTON,CO-RDO,joint_venture,PRD-POTATO,,,,,reported_fact
