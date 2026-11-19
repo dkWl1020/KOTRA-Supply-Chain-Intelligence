@@ -1,0 +1,5 @@
+﻿route_id,route_name,origin_region_id,destination_region_id,origin_facility_id,destination_facility_id,route_basis,valid_from,valid_to
+ROUTE-RISK-001,TOTE Tacoma→Anchorage,US-WA,US-AK,FAC-RISK-TOTE-TAC,FAC-RISK-TOTE-ANC,published_service,,
+ROUTE-RISK-002,Matson Tacoma→Anchorage,US-WA,US-AK,FAC-RISK-MATSON-TAC,FAC-RISK-MATSON-ANC,published_service,,
+ROUTE-RISK-003,Matson Tacoma→Kodiak,US-WA,US-AK,FAC-RISK-MATSON-TAC,FAC-RISK-MATSON-KOD,published_service,,
+ROUTE-RISK-004,Alaska Railroad Anchorage→Fairbanks,US-AK,US-AK,,,published_service,,

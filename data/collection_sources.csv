@@ -1,0 +1,16 @@
+﻿collection_source_id,publisher,access_method,endpoint_or_url,adapter_key,query_config_ref,refresh_policy,enabled,credentials_env_name,availability_note
+COL-RISK-NWS,NOAA National Weather Service,api,https://api.weather.gov/alerts/active,nws_alerts,config/collection_queries.json#COL-RISK-NWS,15 minutes,0,,문서 확인; 직접 시험 HTTP 403. CA는 북부 권역으로 후처리해야 함; 수집 자동화는 비활성 상태
+COL-RISK-USGS,USGS,api,https://earthquake.usgs.gov/fdsnws/event/1/query,usgs_events,config/collection_queries.json#COL-RISK-USGS,15 minutes,0,,문서 확인; 역사 사건 시험 HTTP 403. 운영 시 날짜 조건 갱신; 수집 자동화는 비활성 상태
+COL-RISK-FEMA,FEMA,api,https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries,openfema,config/collection_queries.json#COL-RISK-FEMA,daily,0,,공식 예제 확인; 직접 시험 HTTP 403. 선언 행과 사건 ID 중복 병합 필요; 수집 자동화는 비활성 상태
+COL-RISK-FR,Office of the Federal Register,api,https://www.federalregister.gov/api/v1/documents.json,federal_register,config/collection_queries.json#COL-RISK-FR,daily,0,,문서 확인; 직접 시험 HTTP 403. 최종 규칙·제안·공지 구분; 수집 자동화는 비활성 상태
+COL-RISK-CENSUS,US Census Bureau,api,https://api.census.gov/data/2024/acs/acs1,census_acs,config/collection_queries.json#COL-RISK-CENSUS,annual,0,CENSUS_API_KEY,자료 카탈로그 확인; 직접 시험 HTTP 403. 연도·변수·키 정책 적용; 수집 자동화는 비활성 상태
+COL-RISK-BLS,Bureau of Labor Statistics,download,https://data.bls.gov/cew/data/api/2025/a/area/53000.csv,bls_qcew,config/collection_queries.json#COL-RISK-BLS,quarterly,0,,문서 확인; 직접 시험 HTTP 403. 억제값·소유 범위를 유지; 수집 자동화는 비활성 상태
+COL-RISK-EIA,Energy Information Administration,api,https://api.eia.gov/v2/electricity/retail-sales/data/,eia_v2,config/collection_queries.json#COL-RISK-EIA,monthly,0,EIA_API_KEY,문서 확인; 키 등록 및 실제 수집기 설정 후 실행; 수집 자동화는 비활성 상태
+COL-RISK-NASS,USDA NASS,api,https://quickstats.nass.usda.gov/api/api_GET/,usda_quickstats,config/collection_queries.json#COL-RISK-NASS,release_based,0,USDA_NASS_API_KEY,"문서 확인; 키 등록 및 50,000행 한도에 맞춘 분할 필요; 수집 자동화는 비활성 상태"
+COL-RISK-BEA,Bureau of Economic Analysis,api,https://apps.bea.gov/api/data/,bea_regional,config/collection_queries.json#COL-RISK-BEA,quarterly,0,BEA_API_KEY,등록 페이지 확인; 파라미터 목록부터 조회; 수집 자동화는 비활성 상태
+COL-RISK-NCEI,NOAA NCEI,api,https://www.ncei.noaa.gov/cdo-web/api/v2/data,noaa_cdo,config/collection_queries.json#COL-RISK-NCEI,daily,0,NOAA_CDO_TOKEN,문서 확인; 토큰·페이지 처리 설정 후 실행; 수집 자동화는 비활성 상태
+COL-RISK-SEC,SEC,api,https://data.sec.gov/submissions/CIK0000012927.json,sec_submissions,config/collection_queries.json#COL-RISK-SEC,daily,0,SEC_USER_AGENT,문서 확인; 유효한 User-Agent·요청 속도 적용 후 실행; 수집 자동화는 비활성 상태
+COL-RISK-NWSA,Northwest Seaport Alliance,web_download,https://www.nwseaportalliance.com/about-us/cargo-statistics,manual,config/collection_queries.json#COL-RISK-NWSA,monthly,0,,월별·연간 파일 링크 확인. 실제 파서·파일 다운로드 추가 설정; 수집 자동화는 비활성 상태
+COL-RISK-CALFIRE,CAL FIRE,web,https://www.fire.ca.gov/incidents,manual,config/collection_queries.json#COL-RISK-CALFIRE,daily,0,,사건 상세 페이지 확인. 사건 식별자·좌표·상태를 보존; 수집 자동화는 비활성 상태
+COL-RISK-TOTE,TOTE Maritime Alaska,web,https://www.totemaritime.com/alaska/,manual,config/collection_queries.json#COL-RISK-TOTE,weekly,0,,서비스·터미널 페이지 확인. 공개 서비스와 화주 이용 기록 구분; 수집 자동화는 비활성 상태
+COL-RISK-AKRR,Alaska Railroad,web,https://www.alaskarailroad.com/freight/shipping-schedule,manual,config/collection_queries.json#COL-RISK-AKRR,weekly,0,,공개 운행표 확인. 선박별 일정 오류·변경 가능성은 원문과 대조; 수집 자동화는 비활성 상태

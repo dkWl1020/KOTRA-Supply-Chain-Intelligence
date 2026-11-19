@@ -1,0 +1,1 @@
+{"built_at": "2026-11-17T11:02:39+00:00", "chunk_count": 473, "content_hash": "a1de5ccb57eac2a8cdeac8ff0926a93ab145bd4a33394a189ae6ee4f984ed933", "database": "runtime/kotra.sqlite", "embedding_model_ref": null, "engine": "SQLite FTS5 + Unicode substring fallback", "scope": "source-scoped evidence excerpts; not complete source texts"}

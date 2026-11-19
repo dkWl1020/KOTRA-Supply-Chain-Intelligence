@@ -1,0 +1,26 @@
+﻿metric_id,metric_name,definition,default_unit,aggregation_rule,comparison_conditions,required_dimensions,source_definition,denominator,aggregation_level
+MET-CAP-MW,순하계 발전설비용량,"EIA 순하계 발전설비용량, 발전량과 구분",MW,sum_disjoint_regions,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-GEN-MWH,연간 순발전량,EIA 연간 순발전량,MWh,sum_disjoint_regions,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-SALES-MWH,연간 전력 소매판매량,EIA 총 전력소매판매량,MWh,sum_disjoint_regions,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-PRICE-CENT-KWH,평균 소매전력가격,전체고객 평균 판매단가; 산업용 계약요금 아님,US_cent_per_kWh,weighted_average_requires_sales,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-TEU,연간 컨테이너 처리량,공컨테이너 포함 컨테이너처리량;중복항만범위합산금지,TEU,sum_nonoverlapping_ports,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-INVEST,발표 투자액,계획사업비;투자집행액과구분,USD,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-BIO-L,바이오리액터 용량,공장총바이오리액터용량;연간생산량아님,L,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-JOBS,직원·계약인력,원문이정의한고용범위,persons,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-PGM-OZ,백금족2E생산량,팔라듐·백금합산생산량,troy_oz,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-OIL-BOED,순생산량,순지분에너지환산일평균생산;원유배럴과구분,thousand_BOE_per_day,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-COAL,석탄생산량,연간석탄생산량,thousand_short_tons,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-AIRCRAFT-COUNT,항공기주문대수,확정주문수량;인도실적아님,aircraft,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-AREA-SQFT,제조·수리공간,사업장제조·수리공간면적,square_feet,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-IND-EMP,산업 연평균 고용,조사 정의와 세부 업종 범위를 보존한 산업 고용; 회사 고용과 구분,persons,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-IND-WAGE,평균 연간 임금,산업 종사자 평균 연간 임금; 평균 시급이나 가구소득과 구분,USD_per_year,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-ESTAB,사업장 수,같은 회사의 여러 사업장을 포함하는 사업장 수; 법인 수와 구분,establishments,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-LQ,고용 입지계수,지역의 해당 산업 고용 비중을 전국 해당 산업 비중으로 나눈 비율,ratio,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-FISH-SALES,송어 판매액,NASS Total value of fish sold. 알 제외. 배포가치와 별도,USD,none,동일 지표·단위·기간·지리·조사 범위 및 집계 기준,period;unit;scope_note;source_id,각 관측값의 source_id 및 evidence.locator 참조,,관측값의 region_id/company_id/facility_id 참조
+MET-EIA-CAP,순여름발전용량,여름 최대 부하 조건에서 공급할 수 있는 순발전설비 용량,MW,서로 배타적인 같은 연도의 주별 합계만 허용,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state
+MET-EIA-GEN,연간 순발전량,발전소 자체 사용 전력을 제외한 연간 발전량,MWh,서로 배타적인 같은 연도의 주별 합계만 허용,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state
+MET-EIA-SALES,연간 전력 소매판매량,주 내 최종 전력 소비자에게 판매한 전력량,MWh,서로 배타적인 같은 연도의 주별 합계만 허용,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state
+MET-EIA-PRICE,평균 전력 소매가격,소매판매 수입을 판매전력량으로 나눈 평균 요금; 개별 공장 계약 요금과 다름,US_cent/kWh,단순 합계·단순 평균 금지; 원자료 분모 가중 필요,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state
+MET-EIA-DIRECT,자가사용 전력량,EIA가 직접 사용으로 분류한 연간 전력량,MWh,서로 배타적인 같은 연도의 주별 합계만 허용,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state
+MET-EIA-CO2,발전 CO2 배출량,전력생산 관련 연간 이산화탄소 배출량,thousand_metric_tonnes,서로 배타적인 같은 연도의 주별 합계만 허용,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state
+MET-EIA-CO2RATE,발전 CO2 배출강도,EIA 표1의 발전량당 이산화탄소 배출 지표,lb/MWh,단순 합계·단순 평균 금지; 원자료 분모 가중 필요,같은 기준연도·EIA 집계 범위·단위,"region_id,period",EIA State Electricity Profiles Table 1,,state

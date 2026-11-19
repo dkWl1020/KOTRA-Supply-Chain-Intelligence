@@ -1,0 +1,91 @@
+{
+  "COL-RISK-NWS": {
+    "area": [
+      "WA",
+      "OR",
+      "ID",
+      "WY",
+      "MT",
+      "AK",
+      "CA"
+    ]
+  },
+  "COL-RISK-USGS": {
+    "format": "geojson",
+    "starttime": "2018-11-30",
+    "endtime": "2018-12-01",
+    "minmagnitude": 7,
+    "minlatitude": 55,
+    "maxlatitude": 65,
+    "minlongitude": -155,
+    "maxlongitude": -145
+  },
+  "COL-RISK-FEMA": {
+    "$filter": "disasterNumber eq 4313",
+    "$top": 1000
+  },
+  "COL-RISK-FR": {
+    "conditions[term]": "semiconductor",
+    "per_page": 100
+  },
+  "COL-RISK-CENSUS": {
+    "get": "NAME,B01003_001E",
+    "for": "state:53"
+  },
+  "COL-RISK-BLS": {
+    "year": 2025,
+    "quarter": "a",
+    "area": "53000",
+    "ownership": "private/all must be selected"
+  },
+  "COL-RISK-EIA": {
+    "frequency": "annual",
+    "facets[stateid][]": [
+      "WA",
+      "OR",
+      "ID",
+      "WY",
+      "MT",
+      "AK",
+      "CA"
+    ],
+    "data[]": [
+      "price"
+    ],
+    "length": 5000
+  },
+  "COL-RISK-NASS": {
+    "state_alpha": "WA",
+    "year": "2024",
+    "commodity_desc": "APPLES",
+    "format": "JSON"
+  },
+  "COL-RISK-BEA": {
+    "method": "GetParameterList",
+    "datasetname": "Regional",
+    "ResultFormat": "JSON"
+  },
+  "COL-RISK-NCEI": {
+    "datasetid": "GHCND",
+    "locationid": "FIPS:53",
+    "startdate": "2021-06-25",
+    "enddate": "2021-06-30",
+    "limit": 1000
+  },
+  "COL-RISK-SEC": {
+    "cik": "0000012927",
+    "company": "Boeing"
+  },
+  "COL-RISK-NWSA": {
+    "extract": "monthly TEU and annual trade files"
+  },
+  "COL-RISK-CALFIRE": {
+    "region_scope": "northern_california_counties"
+  },
+  "COL-RISK-TOTE": {
+    "extract": "service and terminal notices"
+  },
+  "COL-RISK-AKRR": {
+    "extract": "freight and marine schedules"
+  }
+}

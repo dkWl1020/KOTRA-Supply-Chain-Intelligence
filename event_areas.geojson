@@ -1,0 +1,24 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "GEO-RISK-DIXIE",
+      "properties": {
+        "feature_id": "GEO-RISK-DIXIE",
+        "event_id": "EVT-RISK-DIXIE",
+        "issued_at": "2021-07-13",
+        "valid_until": "2021-10-25",
+        "source_ref": "SRC-RISK-007",
+        "geometry_basis": "published_incident_point_not_perimeter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -121.389439,
+          39.871306
+        ]
+      }
+    }
+  ]
+}

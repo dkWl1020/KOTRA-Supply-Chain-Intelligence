@@ -1,0 +1,30 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Generated runtime state
+runtime/
+*.sqlite
+*.sqlite3
+*.db
+*.log
+# Generated output and caches
+outputs/
+dist/
+build/
+data/raw/
+data/staging/
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Large / potentially restricted research attachments (review before sharing)
+inputs/

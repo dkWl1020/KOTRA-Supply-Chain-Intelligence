@@ -1,0 +1,5 @@
+﻿segment_id,route_id,sequence,origin_facility_id,destination_facility_id,transport_mode,corridor_name,geometry_ref
+SEG-RISK-001,ROUTE-RISK-001,1,FAC-RISK-TOTE-TAC,FAC-RISK-TOTE-ANC,sea,TOTE Tacoma→Anchorage (서비스 연결; 실제 선형·중간 기항 순서 미포함),
+SEG-RISK-002,ROUTE-RISK-002,1,FAC-RISK-MATSON-TAC,FAC-RISK-MATSON-ANC,sea,Matson Tacoma→Anchorage (서비스 연결; 실제 선형·중간 기항 순서 미포함),
+SEG-RISK-003,ROUTE-RISK-003,1,FAC-RISK-MATSON-TAC,FAC-RISK-MATSON-KOD,sea,Matson Tacoma→Kodiak (서비스 연결; 실제 선형·중간 기항 순서 미포함),
+SEG-RISK-004,ROUTE-RISK-004,1,,,rail,Alaska Railroad Anchorage→Fairbanks (서비스 연결; 실제 선형·중간 기항 순서 미포함),

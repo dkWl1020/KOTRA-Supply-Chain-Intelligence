@@ -1,0 +1,11 @@
+﻿event_id,event_type,title,description,occurred_at,announced_at,ended_at,event_status,location_ref,external_event_key,last_seen_at,expires_at,geometry_ref,severity_basis,is_replay
+EVT-RISK-STRIKE,labor_dispute,Boeing IAM 파업과 생산 중단,"2024년 파업 이후 11월 4일 계약 가결, 4분기 관련 항공기 생산 재개",,2024-11-04,2024-11-04,historical,US-WA,IAM751-2024-strike,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-MAX,aviation_safety,737-9 MAX 운항 중지와 검사,일부 737-9 MAX에 대한 2024년 1월 긴급 안전조치. 1월 24일 점검 절차 승인 이후 기체별 복귀 조건 적용,2024-01-06,2024-01-06,,historical,US-WA,FAA-EAD-2024-02-51,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-MERBOK,coastal_storm,알래스카 Merbok 연안 폭풍,알래스카 서부 해안 도로·비행장·방재시설 피해를 동반한 역사 사례,2022-09-16,,2022-09-19,historical,US-AK,AK-MERBOK-2022,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-YELLOWSTONE,flood,Yellowstone 홍수와 도로 피해,Wyoming·Montana 경계의 북부 Yellowstone 도로와 기반시설 훼손. 지역 전체 교역 중단을 의미하지 않음,2022-06-13,,,historical,US-WY,NPS-YELL-20220613,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-DIXIE,wildfire,북부 캘리포니아 Dixie Fire,Butte·Plumas·Shasta·Lassen·Tehama에 걸친 산불. 주 전체·Bay9 전체 피해로 확대하지 않음,2021-07-13,,2021-10-25,historical,US-CA-NORTH,CALFIRE-DIXIE-2021,2026-11-17,,GEO-RISK-DIXIE,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-ORFIRES,wildfire,Oregon Labor Day 산불,2020년 9월 강풍·건조 조건에서 확산한 산불과 산림·도로 복구 사례,2020-09-07,,,historical,US-OR,ODF-LABORDAY-2020,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-IDFLOOD,flood,Idaho 폭풍·홍수·산사태,2017년 3월 재난으로 8개 카운티의 공공시설 복구 지원이 승인된 사례,2017-03-06,2017-05-18,2017-03-28,historical,US-ID,FEMA-4313-DR-ID,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-PNWHEAT,heatwave,태평양 북서부 2021년 폭염,2021년 6월 말 Washington·Oregon 지역의 이례적 고온 기록. 특정 공장 중단 여부와 구분,2021-06-25,,,historical,US-OR,NWS-PNW-HEAT-202106,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-WAFLOOD,flood,Washington Nooksack·Skagit 홍수,2021년 11월 연속 강수로 서부 Washington 하천 범람 발생,2021-11-11,,,historical,US-WA,WA-NOOKSACK-SKAGIT-202111,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1
+EVT-RISK-AKQUAKE,earthquake,Anchorage 규모 7.1 지진,2018년 11월 30일 Anchorage 북쪽에서 발생한 지진,2018-11-30T17:29:28Z,,,historical,US-AK,USGS-ANCHORAGE-20181130,2026-11-17,,,공식 사건·지역 영향 기록. 기업별 피해 규모·위험 점수는 산출하지 않음,1

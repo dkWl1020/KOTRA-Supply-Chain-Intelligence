@@ -1,0 +1,5 @@
+﻿regulation_id,authority,jurisdiction,title,document_number,published_at,effective_at,expires_at,status,supersedes_id
+REG-RISK-FAA2024,FAA,US,특정 Boeing 737-9 긴급 점검·시정조치,AD 2024-02-51 / 2024-00993,2024-01-18,2024-01-18,,historical_reference,
+REG-RISK-CHIPS,US Department of Commerce / NIST,US,CHIPS 지원금 국가안보 가드레일,88 FR 65600 / 15 CFR Part 231,2023-09-25,,,source_snapshot,
+REG-RISK-UFLPA,CBP,US,Uyghur Forced Labor Prevention Act,Public Law 117-78,2021-12-23,2022-06-21,,source_snapshot,
+REG-RISK-FOOD,FDA,US,특정 식품의 추가 추적 기록 요건,87 FR 70910 / FSMA Section 204(d),2022-11-21,,,enforcement_deferred_source_snapshot,

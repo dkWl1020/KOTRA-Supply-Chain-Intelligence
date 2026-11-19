@@ -1,0 +1,8 @@
+{
+  "type": "FeatureCollection",
+  "features": [],
+  "metadata": {
+    "status": "not_collected",
+    "reason": "4개 서비스 연결은 확보했으나 실제 도로·철도·해상 운항 선형 원자료는 확보되지 않음. routes/route_segments를 실제 선형으로 변환하지 않음."
+  }
+}

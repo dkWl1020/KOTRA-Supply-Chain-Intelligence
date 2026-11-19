@@ -1,0 +1,9 @@
+﻿case_id,question,input_ids,expected_entity_ids,required_evidence_ids,expected_findings,forbidden_claims
+CASE-001,Boeing의 과거 파업 사건과 등록 관계를 설명,"{""company_id"": ""CO-BOEING"", ""event_id"": ""EVT-RISK-STRIKE""}","[""CO-BOEING"", ""EVT-RISK-STRIKE""]","[""EV-RISK-001"", ""EV-RISK-011""]",과거 시연 사건. 보고된 생산중단과 한국 기업별 영향 근거 구분,현재 파업 진행; 대한항공 실제 피해액; KAI의 미공개 재고 추정
+CASE-002,대한항공과 Boeing의 연결 근거를 설명,"{""company_id"": ""CO-KOREANAIR""}","[""CO-KOREANAIR"", ""CO-BOEING"", ""REL-CORE-003""]","[""EV-CORE-0122""]",주문 발표와 인도 완료 구분. 공개된 주문 관계 범위 설명,2024 파업 전에 체결된2026계약이라고 설명; 특정공장에서제작된기체로확정
+CASE-003,SK하이닉스와 NVIDIA의 협력·공급 관계 조회,"{""company_id"": ""CO-SKHYNIX""}","[""CO-SKHYNIX"", ""CO-NVIDIA"", ""REL-CORE-001""]","[""EV-CORE-0120""]",기업 차원의 협력 근거 표시; 특정공장 연결 제외,Boise공장에서SK하이닉스메모리를생산; 임의납품량
+CASE-004,북부 캘리포니아의 전력 수치 비교,"{""region_id"": ""US-CA-NORTH""}","[""US-CA-NORTH"", ""US-CA"", ""US-CA-BAY9""]",[],주전체49개전력지표중CA값은US-CA범위. NORTH범위값대신사용하지않음,CA주전체전력발전량을북부40개카운티값으로표시
+CASE-005,Dixie Fire 공간자료 해석,"{""event_id"": ""EVT-RISK-DIXIE""}","[""EVT-RISK-DIXIE""]","[""EV-RISK-005""]",사건 대표점. 실제 소실경계가 아니며 과거 사건,점좌표를실제산불경계로처리; 근처모든공장가동중단
+CASE-006,규칙 미리보기에서 없는 기업 ID 차단,"{""company_id"": ""CO-NOT-EXIST""}",[],[],ID 오류 반환. 분석·보고서를 정상완료로 저장하지 않음,가상기업설명생성; 성공결과반환
+CASE-007,과거 사건으로 신규 알림 생성 차단,"{""event_id"": ""EVT-RISK-STRIKE"", ""watch_target"": ""CO-BOEING""}","[""CO-BOEING""]",[],is_replay=1인 사건은현재알림에서제외,현재위험알림생성
+CASE-008,보고서 승인 후 수정,"{""workflow"": ""create-review-edit""}",[],[],"내용수정시version증가,status=draft,review_id초기화",수정된내용에이전승인상태유지
