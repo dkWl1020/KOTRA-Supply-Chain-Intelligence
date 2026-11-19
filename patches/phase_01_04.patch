@@ -1,0 +1,258 @@
+diff --git a/docs/PHASE_01_CURATED_CANDIDATES.md b/docs/PHASE_01_CURATED_CANDIDATES.md
+new file mode 100644
+index 0000000..fd8b21c
+--- /dev/null
++++ b/docs/PHASE_01_CURATED_CANDIDATES.md
+@@ -0,0 +1,22 @@
++# Phase 01-04: source-traceable candidate promotion
++
++This step promotes accepted staging rows into `runtime/candidates.sqlite`, **not** the production `runtime/kotra.sqlite` database. It never asserts that candidate records represent verified suppliers or proven relationships.
++
++## Usage
++
++1. Import a CSV using `python -m ingest.raw_import FILE.csv --source-id SRC-EXAMPLE`.
++2. Stage the SHA-256 returned by the importer using `python -m ingest.staging HASH --schema schema.json`.
++3. Promote using `python -m ingest.curate BATCH_ID --entity-type company --name-field name`.
++
++Entity types supported: `company`, `facility`, `product`, `industry`.
++
++Each accepted staging row retains raw SHA-256, source ID, verification status, and normalized record. Identical normalized names within one entity type are grouped as candidate observations, not independently verified matches. Cross-language aliases and conflicting names **are not** auto-merged; a later human-reviewed alias reconciliation workflow is required.
++
++Promotion is transactional and idempotent for each staging batch. Existing production CSV, production DB and report data remain untouched. The candidate store is runtime-only and should not be committed to Git.
++
++## Limitations / next tasks
++
++- No public web data collected in this phase.
++- No canonical entity ID or production table write.
++- No automated multilingual matching, address reconciliation or false-positive review UI.
++- Add curated review and explicit mapping before promoting into the production DB.
+diff --git a/docs/PROGRESS.md b/docs/PROGRESS.md
+index 9f80d8b..e859e7e 100644
+--- a/docs/PROGRESS.md
++++ b/docs/PROGRESS.md
+@@ -35,3 +35,8 @@ P00-04: compare this patch with GitHub working tree; check tracked files and sen
+ - Added `ingest/staging.py` for CSV/JSON/JSONL schema validation, row-level errors, and idempotent staging batches.
+ - Added `tests/test_staging.py` and `docs/PHASE_01_STAGING.md`.
+ - No production DB changes and no new external data collection. Curated promotion remains deferred.
++
++## Phase 01-04 — candidate promotion
++- Added `ingest/curate.py`, candidate entity/observation tables in isolated `runtime/candidates.sqlite`, and regression tests.
++- Production `runtime/kotra.sqlite` and curated CSVs are unchanged.
++- Next: reviewed alias mapping and real dataset acquisition.
+diff --git a/docs/TASKS.md b/docs/TASKS.md
+index 615b26c..1fe8620 100644
+--- a/docs/TASKS.md
++++ b/docs/TASKS.md
+@@ -35,3 +35,8 @@
+ - [x] P01-03a Stage structured raw files with typed validation and row-level rejects.
+ - [ ] P01-03b Implement source-aware curated promotion and entity reconciliation.
+ - [ ] P01-03c Acquire and license-check additional real datasets.
++
++## Phase 01-04 checkpoint
++- [x] P01-04a Promote accepted staged rows into isolated candidate SQLite store with raw provenance and idempotency.
++- [ ] P01-04b Human-reviewed alias mapping and canonical production DB import.
++- [ ] P01-04c Actual public data collection and licensing review.
+diff --git a/ingest/curate.py b/ingest/curate.py
+new file mode 100644
+index 0000000..dd6777d
+--- /dev/null
++++ b/ingest/curate.py
+@@ -0,0 +1,134 @@
++"""Promote accepted staging rows to an isolated, source-traceable candidate catalog.
++
++This is NOT the production companies/facilities DB. Candidate matches require review
++before any canonical supply-chain relationship is asserted.
++"""
++import argparse
++import json
++import re
++import sqlite3
++import unicodedata
++from contextlib import closing
++from datetime import datetime, timezone
++from pathlib import Path
++
++ALLOWED = {"company", "facility", "product", "industry"}
++
++
++def normalized_name(value):
++    if not isinstance(value, str):
++        raise ValueError("name must be a string")
++    value = unicodedata.normalize("NFKC", value).casefold().strip()
++    value = re.sub(r"\s+", " ", value)
++    if not value:
++        raise ValueError("name cannot be empty")
++    return value
++
++
++def _create(db):
++    db.executescript("""
++    CREATE TABLE IF NOT EXISTS candidate_entities (
++        candidate_id INTEGER PRIMARY KEY,
++        entity_type TEXT NOT NULL,
++        canonical_name TEXT NOT NULL,
++        normalized_name TEXT NOT NULL,
++        review_status TEXT NOT NULL DEFAULT 'unverified',
++        created_at TEXT NOT NULL,
++        UNIQUE(entity_type, normalized_name)
++    );
++    CREATE TABLE IF NOT EXISTS candidate_aliases (
++        entity_type TEXT NOT NULL,
++        normalized_alias TEXT NOT NULL,
++        candidate_id INTEGER NOT NULL REFERENCES candidate_entities(candidate_id),
++        original_alias TEXT NOT NULL,
++        PRIMARY KEY(entity_type, normalized_alias)
++    );
++    CREATE TABLE IF NOT EXISTS candidate_observations (
++        batch_id INTEGER NOT NULL,
++        source_row INTEGER NOT NULL,
++        candidate_id INTEGER NOT NULL REFERENCES candidate_entities(candidate_id),
++        raw_sha256 TEXT NOT NULL,
++        source_id TEXT,
++        verification_status TEXT NOT NULL,
++        record_json TEXT NOT NULL,
++        PRIMARY KEY(batch_id, source_row)
++    );
++    CREATE TABLE IF NOT EXISTS promotion_batches (
++        batch_id INTEGER PRIMARY KEY,
++        entity_type TEXT NOT NULL,
++        promoted_count INTEGER NOT NULL,
++        skipped_count INTEGER NOT NULL,
++        promoted_at TEXT NOT NULL
++    );
++    """)
++
++
++def promote_batch(batch_id, *, root, entity_type, name_field='name'):
++    if entity_type not in ALLOWED:
++        raise ValueError('Unsupported entity_type')
++    if not isinstance(batch_id, int) or isinstance(batch_id, bool) or batch_id < 1:
++        raise ValueError('Invalid batch_id')
++    if not isinstance(name_field, str) or not name_field.isidentifier():
++        raise ValueError('Invalid name_field')
++    root = Path(root).resolve()
++    staging_path = root / 'runtime' / 'staging.sqlite'
++    raw_path = root / 'runtime' / 'raw_imports.sqlite'
++    if not staging_path.is_file() or not raw_path.is_file():
++        raise FileNotFoundError('Staging or raw manifest missing')
++    with closing(sqlite3.connect(staging_path)) as staging, closing(sqlite3.connect(raw_path)) as raw:
++        batch = staging.execute('SELECT raw_sha256, accepted FROM staging_batches WHERE batch_id=?', (batch_id,)).fetchone()
++        if batch is None:
++            raise ValueError('Unknown staging batch')
++        manifest = raw.execute('SELECT first_source_id, verification_status, stored_path FROM raw_imports WHERE sha256=?', (batch[0],)).fetchone()
++        if manifest is None:
++            raise ValueError('Missing raw provenance')
++        from ingest.staging import _hash
++        raw_object = (root / manifest[2]).resolve()
++        raw_dir = (root / 'data' / 'raw' / 'objects').resolve()
++        if not raw_object.is_relative_to(raw_dir) or not raw_object.is_file() or raw_object.is_symlink() or _hash(raw_object) != batch[0]:
++            raise ValueError('Raw provenance integrity mismatch')
++        rows = staging.execute('SELECT source_row, normalized_json FROM staging_rows WHERE batch_id=? AND errors_json IS NULL ORDER BY source_row', (batch_id,)).fetchall()
++        if len(rows) != batch[1]:
++            raise ValueError('Staging accepted-count mismatch')
++        prepared = []
++        for line, payload in rows:
++            record = json.loads(payload)
++            name = record.get(name_field)
++            prepared.append((line, name, normalized_name(name), payload))
++    dest = root / 'runtime' / 'candidates.sqlite'
++    dest.parent.mkdir(parents=True, exist_ok=True)
++    with closing(sqlite3.connect(dest, timeout=30)) as db:
++        db.execute('PRAGMA foreign_keys=ON')
++        _create(db)
++        prior = db.execute('SELECT entity_type, promoted_count, skipped_count FROM promotion_batches WHERE batch_id=?', (batch_id,)).fetchone()
++        if prior:
++            if prior[0] != entity_type:
++                raise ValueError('Batch already promoted with different entity_type')
++            return {'status': 'existing', 'batch_id': batch_id, 'promoted': prior[1], 'skipped': prior[2]}
++        now = datetime.now(timezone.utc).isoformat()
++        with db:
++            for line, name, key, payload in prepared:
++                found = db.execute('SELECT candidate_id FROM candidate_aliases WHERE entity_type=? AND normalized_alias=?', (entity_type, key)).fetchone()
++                if found:
++                    candidate_id = found[0]
++                else:
++                    cursor = db.execute('INSERT INTO candidate_entities(entity_type,canonical_name,normalized_name,created_at) VALUES (?,?,?,?)', (entity_type, name, key, now))
++                    candidate_id = cursor.lastrowid
++                    db.execute('INSERT INTO candidate_aliases VALUES (?,?,?,?)', (entity_type, key, candidate_id, name))
++                db.execute('INSERT INTO candidate_observations VALUES (?,?,?,?,?,?,?)', (batch_id, line, candidate_id, batch[0], manifest[0], manifest[1], payload))
++            db.execute('INSERT INTO promotion_batches VALUES (?,?,?,?,?)', (batch_id, entity_type, len(prepared), 0, now))
++        return {'status': 'promoted', 'batch_id': batch_id, 'promoted': len(prepared), 'skipped': 0}
++
++
++def main():
++    p = argparse.ArgumentParser(description=__doc__)
++    p.add_argument('batch_id', type=int)
++    p.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
++    p.add_argument('--entity-type', choices=sorted(ALLOWED), required=True)
++    p.add_argument('--name-field', default='name')
++    args = p.parse_args()
++    print(json.dumps(promote_batch(args.batch_id, root=args.root, entity_type=args.entity_type, name_field=args.name_field), ensure_ascii=False, indent=2))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/tests/test_curate.py b/tests/test_curate.py
+new file mode 100644
+index 0000000..99c96ce
+--- /dev/null
++++ b/tests/test_curate.py
+@@ -0,0 +1,58 @@
++import json
++import sqlite3
++import tempfile
++import unittest
++from contextlib import closing
++from pathlib import Path
++from ingest.raw_import import ingest_file
++from ingest.staging import stage_import
++from ingest.curate import promote_batch, normalized_name
++
++
++class CurateTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.root = Path(self.tmp.name)
++        self.schema = self.root / 'schema.json'
++        self.schema.write_text(json.dumps({'columns': {'name': {'type': 'text', 'required': True}, 'region': {'type': 'text'}}}))
++
++    def batch(self, filename, contents):
++        path = self.root / filename
++        path.write_text(contents, encoding='utf-8')
++        digest = ingest_file(path, root=self.root, source_id='SRC-TEST')['sha256']
++        return stage_import(digest, root=self.root, schema_path=self.schema)['batch_id']
++
++    def test_provenance_and_idempotency(self):
++        batch = self.batch('a.csv', 'name,region\nAlpha,WA\nALPHA,OR\nBeta,ID\n')
++        result = promote_batch(batch, root=self.root, entity_type='company')
++        self.assertEqual(result['promoted'], 3)
++        self.assertEqual(promote_batch(batch, root=self.root, entity_type='company')['status'], 'existing')
++        with closing(sqlite3.connect(self.root / 'runtime' / 'candidates.sqlite')) as db:
++            self.assertEqual(db.execute('SELECT count(*) FROM candidate_entities').fetchone()[0], 2)
++            self.assertEqual(db.execute('SELECT count(*) FROM candidate_observations').fetchone()[0], 3)
++            self.assertEqual(db.execute('SELECT DISTINCT verification_status FROM candidate_observations').fetchone()[0], 'unverified')
++
++    def test_rejected_rows_excluded(self):
++        batch = self.batch('a.csv', 'name,region\nAlpha,WA\n,OR\n')
++        self.assertEqual(promote_batch(batch, root=self.root, entity_type='facility')['promoted'], 1)
++
++    def test_missing_name_rolls_back(self):
++        batch = self.batch('a.csv', 'name,region\nAlpha,WA\n,OR\n')
++        with self.assertRaises(ValueError):
++            promote_batch(batch, root=self.root, entity_type='company', name_field='missing')
++        self.assertFalse((self.root / 'runtime' / 'candidates.sqlite').exists())
++
++    def test_invalid_entity_and_batch(self):
++        with self.assertRaises(ValueError):
++            promote_batch(1, root=self.root, entity_type='event')
++        with self.assertRaises(ValueError):
++            promote_batch(0, root=self.root, entity_type='company')
++
++    def test_normalization(self):
++        self.assertEqual(normalized_name('  ＡＬＰＨＡ  '), 'alpha')
++        self.assertNotEqual(normalized_name('SK hynix'), normalized_name('하이닉스'))
++
++
++if __name__ == '__main__':
++    unittest.main()

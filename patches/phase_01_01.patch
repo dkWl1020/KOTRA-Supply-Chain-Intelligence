@@ -1,0 +1,188 @@
+diff --git a/docs/PHASE_01_SOURCE_INVENTORY.md b/docs/PHASE_01_SOURCE_INVENTORY.md
+new file mode 100644
+index 0000000..e980032
+--- /dev/null
++++ b/docs/PHASE_01_SOURCE_INVENTORY.md
+@@ -0,0 +1,19 @@
++# Phase 01-01 — Existing source and dataset inventory
++
++## Scope
++This task introduces an **offline, read-only** audit. It does **not** scrape external websites, download new records, or certify any licensing terms. The source catalog contains candidate collection channels; an endpoint listed there is not evidence that collection is currently operational.
++
++## Run
++
++```powershell
++python scripts/audit_sources.py --output outputs/source_inventory.json
++python -m unittest discover -s tests -v
++python run.py validate
++```
++
++`outputs/` is ignored by Git. Review the JSON summary, including each CSV's row count and SHA-256. These counts include duplicates and do not establish unique verified entities. Source licensing, API availability, robots restrictions, credentials, and rate limits remain **manual review** until checked against official source documentation.
++
++## Next tickets
++- P01-02: raw/staging/curated import manifest with idempotent batch behavior.
++- P01-03: source-specific collectors, each with permissions, provenance, and a controlled sample import before scaling.
++- Resolve Phase 00 geography and Git tracking checks before producing regional aggregates or publishing source data.
+diff --git a/docs/PROGRESS.md b/docs/PROGRESS.md
+index 004c9b9..fd95dc5 100644
+--- a/docs/PROGRESS.md
++++ b/docs/PROGRESS.md
+@@ -17,3 +17,9 @@ P00-04: compare this patch with GitHub working tree; check tracked files and sen
+ `python -m unittest discover -s tests -v`
+ `git status`
+ `git ls-files web inputs runtime`
++
++## Phase 01-01 — offline inventory tooling
++- Added `scripts/audit_sources.py`, read-only catalog/CSV inventory and SHA-256 summary.
++- Added `tests/test_source_audit.py` and `docs/PHASE_01_SOURCE_INVENTORY.md`.
++- No new external datasets collected; licensing and endpoint availability not verified.
++- P00-04/05/06 remain open; next P01-02 is idempotent ingestion manifest.
+diff --git a/docs/TASKS.md b/docs/TASKS.md
+index 5eb35d1..ffbab9b 100644
+--- a/docs/TASKS.md
++++ b/docs/TASKS.md
+@@ -9,7 +9,7 @@
+ - [ ] P00-06 Produce current-to-target schema map and API request/response fixtures; decide compatibility migrations.
+ 
+ ## Phase 01 — data first
+-- [ ] P01-01 Source inventory: license, update cadence, provenance, rate limits and permitted collection method.
++- [x] P01-01 Source inventory: license, update cadence, provenance, rate limits and permitted collection method.
+ - [ ] P01-02 Implement raw/staging/curated manifest and idempotent batch imports.
+ - [ ] P01-03 Expand actual datasets with domain-level QA and source citations.
+ 
+diff --git a/scripts/audit_sources.py b/scripts/audit_sources.py
+new file mode 100644
+index 0000000..4f54da0
+--- /dev/null
++++ b/scripts/audit_sources.py
+@@ -0,0 +1,77 @@
++#!/usr/bin/env python3
++"""Offline, read-only audit of existing source catalog and reference CSV files."""
++import argparse
++import csv
++import hashlib
++import json
++from collections import Counter
++from datetime import datetime, timezone
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++REQUIRED = ('collection_source_id', 'publisher', 'access_method', 'endpoint_or_url', 'refresh_policy', 'enabled')
++
++
++def read_csv(path):
++    with path.open('r', encoding='utf-8-sig', newline='') as stream:
++        reader = csv.DictReader(stream)
++        if reader.fieldnames is None:
++            raise ValueError(f'Empty CSV: {path.name}')
++        return reader.fieldnames, list(reader)
++
++
++def audit(root=ROOT):
++    catalog = root / 'data' / 'collection_sources.csv'
++    fields, sources = read_csv(catalog)
++    missing = sorted(set(REQUIRED) - set(fields))
++    if missing:
++        raise ValueError('Missing catalog columns: ' + ', '.join(missing))
++    ids = [r['collection_source_id'].strip() for r in sources]
++    duplicates = sorted(k for k, count in Counter(ids).items() if count > 1)
++    if duplicates or any(not x for x in ids):
++        raise ValueError(f'Invalid source IDs; duplicates={duplicates}')
++    source_rows = []
++    for r in sources:
++        source_rows.append({
++            'id': r['collection_source_id'],
++            'publisher': r['publisher'],
++            'method': r['access_method'],
++            'url': r['endpoint_or_url'],
++            'cadence': r['refresh_policy'],
++            'enabled': r['enabled'] == '1',
++            'credentials_env_name': r.get('credentials_env_name', ''),
++            'collection_status': 'not_verified_in_this_audit',
++            'license_status': 'needs_manual_review',
++            'rate_limit_status': 'needs_manual_review',
++        })
++    datasets = []
++    for path in sorted((root / 'data').glob('*.csv')):
++        headers, rows = read_csv(path)
++        digest = hashlib.sha256(path.read_bytes()).hexdigest()
++        datasets.append({'file': path.name, 'rows': len(rows), 'columns': len(headers), 'sha256': digest})
++    return {'schema_version': 1, 'audit_type': 'offline_local_inventory',
++            'sources': source_rows, 'datasets': datasets,
++            'summary': {'source_count': len(sources), 'enabled_source_count': sum(x['enabled'] for x in source_rows),
++                        'dataset_count': len(datasets), 'dataset_row_total': sum(x['rows'] for x in datasets)},
++            'notes': ['CSV row counts are not verified unique real-world entities.',
++                      'This audit does not download data or verify website terms, licensing or availability.',
++                      'The source catalog lists candidate endpoints, not proven operational collectors.']}
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--root', type=Path, default=ROOT)
++    parser.add_argument('--output', type=Path, help='Optional JSON output file; otherwise stdout')
++    args = parser.parse_args()
++    result = audit(args.root)
++    text = json.dumps(result, ensure_ascii=False, indent=2) + '\n'
++    if args.output:
++        args.output.parent.mkdir(parents=True, exist_ok=True)
++        args.output.write_text(text, encoding='utf-8')
++        print(f'Wrote {args.output}')
++    else:
++        print(text, end='')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/tests/test_source_audit.py b/tests/test_source_audit.py
+new file mode 100644
+index 0000000..2e0982f
+--- /dev/null
++++ b/tests/test_source_audit.py
+@@ -0,0 +1,47 @@
++"""Offline tests for Phase 01 source inventory."""
++import csv
++import tempfile
++import unittest
++from pathlib import Path
++from scripts.audit_sources import audit
++
++
++class SourceAuditTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.root = Path(self.tmp.name)
++        (self.root / 'data').mkdir()
++
++    def write(self, name, header, rows):
++        with (self.root / 'data' / name).open('w', encoding='utf-8', newline='') as f:
++            w = csv.writer(f)
++            w.writerow(header)
++            w.writerows(rows)
++
++    def test_inventory_counts_and_disables(self):
++        self.write('collection_sources.csv',
++                   ['collection_source_id', 'publisher', 'access_method', 'endpoint_or_url', 'refresh_policy', 'enabled'],
++                   [['S1', 'Agency', 'api', 'https://example.org', 'daily', '0']])
++        self.write('companies.csv', ['id', 'name'], [['1', 'A'], ['2', 'B']])
++        result = audit(self.root)
++        self.assertEqual(result['summary']['source_count'], 1)
++        self.assertEqual(result['summary']['enabled_source_count'], 0)
++        self.assertEqual(result['summary']['dataset_row_total'], 3)
++        self.assertEqual(result['sources'][0]['license_status'], 'needs_manual_review')
++
++    def test_duplicate_source_id_rejected(self):
++        self.write('collection_sources.csv',
++                   ['collection_source_id', 'publisher', 'access_method', 'endpoint_or_url', 'refresh_policy', 'enabled'],
++                   [['S1', 'A', 'api', 'https://a.org', 'daily', '0'], ['S1', 'B', 'api', 'https://b.org', 'daily', '0']])
++        with self.assertRaisesRegex(ValueError, 'duplicates'):
++            audit(self.root)
++
++    def test_missing_required_column_rejected(self):
++        self.write('collection_sources.csv', ['collection_source_id'], [['S1']])
++        with self.assertRaisesRegex(ValueError, 'Missing catalog columns'):
++            audit(self.root)
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -9,8 +9,8 @@
 - [ ] P00-06 Produce current-to-target schema map and API request/response fixtures; decide compatibility migrations.
 
 ## Phase 01 — data first
-- [ ] P01-01 Source inventory: license, update cadence, provenance, rate limits and permitted collection method.
-- [ ] P01-02 Implement raw/staging/curated manifest and idempotent batch imports.
+- [x] P01-01 Source inventory: license, update cadence, provenance, rate limits and permitted collection method.
+- [~] P01-02 Raw file SHA-256 manifest and idempotent import attempts implemented; staging, curated promotion and multi-file batch rollback remain open.
 - [ ] P01-03 Expand actual datasets with domain-level QA and source citations.
 
 ## Phase 02 — backend/data scale
@@ -30,3 +30,13 @@
 ## Deferred production
 - [ ] P07-01 Optional AI adapters, AI report writing.
 - [ ] P07-02 Auth/RBAC, scheduled collection and deployment security.
+
+## Phase 01-03 checkpoint
+- [x] P01-03a Stage structured raw files with typed validation and row-level rejects.
+- [ ] P01-03b Implement source-aware curated promotion and entity reconciliation.
+- [ ] P01-03c Acquire and license-check additional real datasets.
+
+## Phase 01-04 checkpoint
+- [x] P01-04a Promote accepted staged rows into isolated candidate SQLite store with raw provenance and idempotency.
+- [ ] P01-04b Human-reviewed alias mapping and canonical production DB import.
+- [ ] P01-04c Actual public data collection and licensing review.

@@ -1,0 +1,1076 @@
+diff --git a/.gitignore b/.gitignore
+index d25e467..14f9b15 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,5 +1,30 @@
++# Secrets and local environment
+ .env
++.env.*
++!.env.example
++*.pem
++*.key
++.venv/
++venv/
+ __pycache__/
+-*.pyc
+-runtime/*.sqlite*
+-runtime/*log*.json
++*.py[cod]
++.pytest_cache/
++# Generated runtime state
++runtime/
++*.sqlite
++*.sqlite3
++*.db
++*.log
++# Generated output and caches
++outputs/
++dist/
++build/
++data/raw/
++data/staging/
++# IDE / OS
++.vscode/
++.idea/
++.DS_Store
++Thumbs.db
++# Large / potentially restricted research attachments (review before sharing)
++inputs/
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..f3b4d6a
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,13 @@
++# KOTRA development rules
++
++1. Preserve existing functioning prototype and its baseline; never silently delete or overwrite source data.
++2. Stack: Python 3.11+, SQLite/FTS5, vanilla HTML/CSS/JS; document any new dependency.
++3. Read `docs/MASTER_SPEC.md`, `docs/CURRENT_STATE_AUDIT.md`, `docs/GAP_ANALYSIS.md`, `docs/TASKS.md`, and `docs/PROGRESS.md` before work.
++4. Each task must state allowed files, acceptance tests, data provenance, and rollback plan. Avoid unrelated refactoring.
++5. Never invent facilities, supply edges, coordinates, regulatory applicability, or source citations. Store uncertain claims as unverified, not as facts.
++6. Keep historical incidents separate from active alerts; distinguish risk from confidence and synthetic records from real data.
++7. Keep CA statewide, Bay9, and project-defined Northern CA aggregates distinct. Existing code currently conflates North CA/Bay9 for display: do not propagate into analytics.
++8. Never expose a write-capable local-only server to the public internet. Add auth/RBAC and deployment hardening before external deployment.
++9. Run `python run.py validate` and `python -m unittest discover -s tests -v` after relevant changes; report failures without claiming success.
++10. Commit only reviewed files. `inputs/`, `.env`, `runtime/`, raw/staging data and generated outputs stay out of Git by default. If already committed, .gitignore does not remove their history.
++11. Keep current implementation status and target specification separate. Update progress after each tested task.
+diff --git a/README_PHASE00_PATCH.md b/README_PHASE00_PATCH.md
+new file mode 100644
+index 0000000..5eae677
+--- /dev/null
++++ b/README_PHASE00_PATCH.md
+@@ -0,0 +1,9 @@
++# Phase 00 patch — apply to existing GitHub project
++
++This ZIP is a **full copy of the uploaded prototype with updated docs**, not a fresh app and not a live GitHub checkout. Compare before overwriting newer GitHub files.
++
++Key additions: `AGENTS.md`, `docs/CURRENT_STATE_AUDIT.md`, `docs/GAP_ANALYSIS.md`, `docs/SPEC_INTEGRATION_NOTES.md`, v2 docs and prompts. Updated: `.gitignore`, `docs/TASKS.md`, `docs/PROGRESS.md`, `docs/MASTER_SPEC.md`. Application code and original data were not deliberately changed.
++
++**Do not push blindly:** check `git status`, `git ls-files inputs runtime web`, review the `inputs/` documents for sharing permissions. The revised `.gitignore` cannot remove files already committed in Git history.
++
++Validate: `python run.py validate` and `python -m unittest discover -s tests -v`.
+diff --git a/docs/01_SYSTEM_ARCHITECTURE.md b/docs/01_SYSTEM_ARCHITECTURE.md
+new file mode 100644
+index 0000000..d1a68cc
+--- /dev/null
++++ b/docs/01_SYSTEM_ARCHITECTURE.md
+@@ -0,0 +1,29 @@
++# 01 시스템 아키텍처
++## 컴포넌트
++`run.py` CLI(init/validate/index/serve/import/collect); `api/server.py` 라우팅·정적 서빙; `api/store.py` SQLite 트랜잭션; `api/services/` 도메인별 서비스; `ingest/` 수집·파싱·정제·적재; `analysis/` rule/ai 어댑터; `reports/` 문서 모델·렌더러; `web/` ES 모듈 SPA; `tests/` 단위·통합·브라우저.
++## 디렉터리
++```text
++KOTRA_final/
++  run.py
++  api/{server.py,store.py,routes/,services/}
++  analysis/{interface.py,rule_engine.py,ai_engine.py}
++  ingest/{sources/,collect.py,normalize.py,validate.py,load.py}
++  db/{migrations/,seeds/}
++  data/{raw/,staging/,curated/,manifests/}
++  web/{index.html,styles/,js/{app.js,core/,components/,views/,visualizations/}}
++  reports/{templates/,renderers/,models.py}
++  runtime/  search_index/  tests/  docs/
++```
++## 프로세스 경계
++로컬: 127.0.0.1에만 바인딩, SQLite WAL, 짧은 쓰기 트랜잭션, 단일 쓰기 큐 고려. API와 수집 작업은 명시적 트랜잭션으로 분리. 외부 접속은 인증·CSRF·CORS·요청 제한·TLS·백업을 도입하기 전 금지.
++## 환경설정
++`config.example.json`에 DB 경로, raw 디렉터리, 검색 제한, 포트, 엔진 모드, 최대 업로드 크기. 비밀키는 저장소에 커밋 금지.
++## 의존성 정책
++Python 표준 라이브러리 우선. PDF/DOCX, 브라우저 테스트, 지도 렌더링 등 필요한 의존성은 `requirements.txt`에 버전 고정·근거 기록. CDN 필수 의존성 금지(오프라인 시연 가능).
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/02_DATA_COLLECTION.md b/docs/02_DATA_COLLECTION.md
+new file mode 100644
+index 0000000..a605de4
+--- /dev/null
++++ b/docs/02_DATA_COLLECTION.md
+@@ -0,0 +1,22 @@
++# 02 데이터 수집 및 출처
++## 공간 기준
++권역: US-WA, US-OR, US-ID, US-MT, US-AK, US-CA-NORTH, US-CA-BAY9, US-CA(benchmark). `US-CA-NORTH`는 아래 22개 카운티의 프로젝트 자체 정의: Del Norte, Siskiyou, Modoc, Humboldt, Trinity, Shasta, Lassen, Tehama, Plumas, Mendocino, Glenn, Butte, Sierra, Nevada, Yuba, Placer, Colusa, Sutter, Lake, Yolo, El Dorado, Sacramento. Bay9: Alameda, Contra Costa, Marin, Napa, San Francisco, San Mateo, Santa Clara, Solano, Sonoma. 실제 적재 전 카운티 FIPS와 공식 GIS 경계를 검증. CA 전체 지표를 하위 권역 지표에 대입·합산 금지. 다른 CA 카운티는 두 세부 권역에 속하지 않음.
++## 산업 13종
++반도체; AI·ICT; 항공우주; 바이오·헬스; 포토닉스·광학; 첨단·일반 제조; 석유·가스; 광업·핵심광물; 전력·재생에너지; 임산업; 농식품; 수산; 물류·항만. 다중 산업 태깅 허용, 산업코드 사전 유지.
++## 소스 카탈로그
++우선: Census/BEA/BLS/USITC/SEC, Federal Register, USGS/NWS/FEMA, EIA/NOAA/USDA, NWSA 및 주정부 GIS·기업 공시. 원본의 Reuters/Bloomberg/Seattle Times 등은 라이선스/로봇 정책 검토 후 링크·허용된 메타데이터만 저장. 모든 소스는 접근 방식, 범위, 라이선스, 갱신주기, 수집일, 상태를 기록.
++## 파이프라인
++(1) 수집원 등록 (2) 다운로드/메타데이터 (3) 원문 해시·불변 저장 (4) 파싱·staging (5) 필드/단위/날짜/지역 검증 (6) 중복·별칭 매칭 (7) verified/reported/unverified/estimated/synthetic 상태 부여 (8) curated 적재 (9) 인덱스 갱신 (10) 로그·오류 기록.
++## 필수 provenance
++`source_url`, `publisher`, `published_at`, `retrieved_at`, `license_note`, `content_sha256`, `source_type`, `validation_status`, `evidence_tier`, `extraction_method`, `raw_path`, `batch_id`. 미확인 값은 NULL과 `missing_fields`로 보존; 출처를 임의 생성하지 말 것.
++## 규모 및 우선순위
++최대한 많이 수집하되 유효한 독립 레코드와 중복 복제·검색 청크를 구분. 실제 수집 완료 수량은 매니페스트에서 자동 산출. 초기 데이터 수집은 기업·시설·공급망, 경제·교역, 위험·규제 3영역을 균형 있게 진행. 최신 및 장기 시계열 모두 확보. 소스별 권리·요청 제한 준수.
++## 데이터 품질 게이트
++필수키, 참조무결성, 시간/통화/단위, 카운티 FIPS, 좌표 유효성, 중복률, 출처 연결률, null 비율, 검증상태 분포를 자동 보고. 미검증은 수집 가능하지만 자동 공식 경보 단독 근거 금지. `synthetic`은 별도 namespace/seed와 UI 배지로 분리.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/03_DATABASE_SCHEMA.md b/docs/03_DATABASE_SCHEMA.md
+new file mode 100644
+index 0000000..992095d
+--- /dev/null
++++ b/docs/03_DATABASE_SCHEMA.md
+@@ -0,0 +1,29 @@
++# 03 데이터베이스 스키마 계약
++## 기준
++SQLite, `PRAGMA foreign_keys=ON`, WAL, migrations 순차 적용, UTC ISO-8601. **테이블 수를 35로 고정하지 않는다.** 다음은 논리 스키마이며 Phase 0에서 실제 SQL DDL과 컬럼 사전으로 확정한다.
++## 핵심 도메인(원본 유지)
++- 공간: `regions(id PK, code UNIQUE, name_ko, name_en, parent_id FK, region_type, is_benchmark)`, `geographies(id PK, region_id FK, fips UNIQUE, geojson_path, geom_sha256)`, `industries(id PK, code UNIQUE, name_ko, name_en)`.
++- 기업: `companies(id PK, canonical_name, country_code, website, verification_status)`, `company_regions(company_id FK, region_id FK, role, PRIMARY KEY(company_id,region_id,role))`, `facilities(id PK, company_id FK NULL, region_id FK, facility_type, latitude NULL, longitude NULL, coordinate_source_id FK NULL)`. 좌표 검증 없이 임의 입력 금지.
++- 품목·관계: `products(id PK, name, category)`, `product_hs_codes(product_id FK, hs_code, hs_version, PRIMARY KEY(product_id,hs_code,hs_version))`, `supply_edges(id PK, from_company_id FK, to_company_id FK, relationship_type, tier, confidence, validation_status, valid_from, valid_to)`, `logistics_corridors(id PK, name, mode, source_id FK NULL)`.
++- 위험·규제: `events(id PK, event_thread_id, region_id FK, industry_id FK NULL, severity, started_at, ended_at, is_replay, summary)`, `event_impacts(id PK, event_id FK, entity_type, entity_id, impact_type, evidence_id FK NULL)`, `event_timeline(id PK, event_id FK, happened_at, description)`, `regulations(id PK, title, announced_date, effective_date, source_id FK)`, `regulation_impacts`, `tariff_schedules`.
++- EWS: `ews_status(id PK, entity_type, entity_id, level, score NULL, confidence, basis, updated_at)`, `ews_history`, `watchlist_items`, `watchlist_reminders`.
++- 통계: `trade_stats`, `macro_indicators`, `commodity_prices`, `port_metrics`에는 `region_id`, `metric_id`, `period_start`, `period_end`, `aggregation_basis`, `value`, `unit`, `currency`, `source_id`, `validation_status`를 일관 적용. monthly/cumulative/annual/point_in_time 혼합 집계 금지.
++- 근거: `source_documents`, `evidence`, `entity_evidence_map`, `ingestion_runs`, `search_chunks`; FTS5 가상테이블은 별도 생성.
++- 분석·보고: `analysis_runs`, `reports`, `report_reviews`, `record_versions`, `users_roles`.
++## 확장 테이블
++`raw_documents(id PK, source_url, raw_path, sha256 UNIQUE, retrieved_at, license_note, batch_id)`, `raw_records(id PK, raw_document_id FK, payload_json, row_number)`, `collection_jobs(id PK, source_code, schedule, enabled)`, `verification_records(id PK, entity_type, entity_id, status, reviewer, checked_at, note)`, `data_quality_flags(id PK, entity_type, entity_id, code, detail)`, `entity_aliases(id PK, entity_type, entity_id, alias, lang)`, `entity_matches(id PK, left_id, right_id, method, decision)`, `import_batches(id PK, filename, sha256, started_at, status)`, `import_errors(id PK, batch_id FK, row_number, error_code, detail)`.
++## 감사·신뢰도 공통 규칙
++각 주요 엔티티에 `created_at`, `updated_at`, `validation_status`, `source_id` 또는 연결 테이블 적용. `record_versions`는 entity_type/id, revision, before_json, after_json, actor, changed_at를 저장. `source_documents`의 문서 ID와 `evidence`의 발췌 ID를 구분. `reported`와 `verified`는 자동으로 동일시하지 않음.
++## 인덱스
++회사 정규명·별칭, 시설 region/type, 사건 region/started_at, 통계(metric,region,period,aggregation_basis), 공급망 양방향 탐색용 from/to, 출처 hash, FTS5 검색. 실제 쿼리 계획 `EXPLAIN QUERY PLAN`으로 검증.
++## 마이그레이션·시드
++`db/migrations/0001_*.sql`부터 순차 적용; 적용 이력 `schema_migrations` 관리. 기준 데이터 import는 idempotent UPSERT. 데이터 삭제·스키마 변경 시 백업과 롤백 계획 작성.
++## SQL 구현 검수
++Phase 0의 산출물은 실행 가능한 `0001_initial.sql`, `data_dictionary.csv`, FK 검사, 중복 검사, 100k+ 합성 **성능 테스트 데이터** 생성기. 여기 적힌 스키마는 DDL 대체물이 아니므로 SQL 파일 생성 후 문서와 대조한다.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/04_API_CONTRACTS.md b/docs/04_API_CONTRACTS.md
+new file mode 100644
+index 0000000..d1e9ce0
+--- /dev/null
++++ b/docs/04_API_CONTRACTS.md
+@@ -0,0 +1,51 @@
++# 04 REST API 계약
++## 공통 규칙
++`/api/v1` 버전 경로, JSON UTF-8, UTC ISO-8601, `limit` 기본 50 최대 200, `offset` 기본 0, 정렬 allowlist, 검색어 최대 길이 제한. 리스트 응답 `{items:[],page:{limit,offset,total},filters:{}}`; 오류 `{error:{code,message,details,request_id}}`. DB 내부 식별자는 API에서는 사용하되 UI 텍스트·보고서에는 노출 금지. 조회/수정 시 입력 검증, SQL 파라미터 바인딩, 출력 이스케이프.
++## 필수 엔드포인트
++| Method | Path | 필수 쿼리/본문 | 핵심 응답 |
++|---|---|---|---|
++| GET | `/catalog` | 없음 | regions, industries, products, metrics |
++| GET | `/overview` | region_id?,industry_id?,as_of? | kpis, top_events, industries, data_freshness |
++| GET | `/companies` | q?,region_id?,industry_id?,limit?,offset? | 회사 목록 페이지 |
++| GET | `/facilities` | bbox?,zoom?,region_id?,type? | marker 또는 cluster, total |
++| GET | `/network` | company_id 필수, hops=1..3 | nodes,edges,paths,provenance |
++| GET | `/products/{id}/brief` | 없음 | 8 pillars, sources, unknown_fields |
++| GET | `/alternatives` | product_id 또는 hs_code | candidates, match_reasons, evidence |
++| GET | `/logistics` | region_id?,mode? | corridors, facilities, metrics |
++| GET | `/trade-stats` | metric_id?,region_id?,basis?,from?,to? | series,unit,basis,source |
++| POST | `/trade-stats` | validated metric payload | id,revision |
++| POST | `/scraps` | title, excerpt?, url?, region_id?, industry_id? | id,thread_id,missing_metadata_fields |
++| GET | `/events` | is_replay?,region_id?,severity? | events page |
++| GET | `/ews` | entity_type?,region_id?,level? | statuses page |
++| POST | `/ews` | entity_type,entity_id,level,reason | status,history_id |
++| POST | `/analyze` | target_type,target_id,event_id?,engine=`rule` | analysis_id, risk, paths, evidence, warnings |
++| GET | `/reports` | status?,limit?,offset? | reports page |
++| GET | `/reports/{id}` | 없음 | report document model |
++| PUT | `/reports/{id}` | revision,content | new_revision,review_status |
++| POST | `/reports/{id}/review` | decision,note | review entry (운영 단계) |
++| GET | `/reports/{id}/export` | format=html/pdf/docx | attachment + content type |
++| GET | `/evidence/search` | q,filters?,limit?,offset? | snippets,source,status |
++| POST | `/search/query` | `{question,filters}` | interpreted_filters,results,limitations |
++| GET | `/detail/{type}/{id}` | 없음 | entity, evidence, provenance |
++| GET | `/reminders` | due_before?,status? | reminders page |
++| POST | `/admin/imports` | CSV upload, dataset_type | batch_id,preview,errors |
++| POST | `/admin/imports/{id}/commit` | expected_checksum | counts,status |
++| GET | `/admin/ingestion-runs` | status?,source? | runs page |
++| GET | `/admin/health` | 없음 | db,index,storage,collection summary |
++
++## 요청/응답 예시 — 분석
++요청: `{"target_type":"company","target_id":"CO-EXAMPLE","engine":"rule"}`
++응답: `{"analysis_id":"ANL-EXAMPLE","engine":"rule","risk":{"score":null,"level":"watch","confidence":"low","is_heuristic":true},"paths":[],"evidence_ids":[],"recommendations":[],"warnings":["Insufficient verified evidence"]}`. 모든 EXAMPLE 값은 계약 예시이며 실데이터 아님.
++## 동작·오류 계약
++- `400` invalid input, `404` unknown entity, `409` revision conflict, `413` oversized upload, `422` semantic validation, `429` rate limit(운영), `500` internal error, `503` unavailable dependency.
++- 결과 0건은 200 + 빈 배열과 이유 표시. 수집 실패를 0건으로 덮어쓰지 않음.
++- 수정은 revision 낙관적 잠금, DB 트랜잭션, 감사 로그 기록. 승인된 보고서 수정 시 `needs_review` 전환.
++- `/admin/*`는 초기 loopback에서만 활성, 외부 공개 시 인증/RBAC 전 필수 차단.
++- 브라우저와 서버는 이 계약을 테스트 fixture로 공유; endpoint 추가 시 이 문서와 테스트 동시 변경.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/05_UI_UX_DESIGN.md b/docs/05_UI_UX_DESIGN.md
+new file mode 100644
+index 0000000..49ef92a
+--- /dev/null
++++ b/docs/05_UI_UX_DESIGN.md
+@@ -0,0 +1,30 @@
++# 05 UI/UX 구현 명세
++## 디자인 토큰
++Modern Hybrid. Canvas `#F5F7FB`, surface `#FFFFFF`, navy `#0B1730`, primary `#2563EB`, teal `#0F766E`, border `#E9EFF7`. EWS는 alert/red, caution/orange, watch/yellow, normal/green; 검증 상태는 별도 아이콘/텍스트. Pretendard 또는 Noto Sans KR(로컬 대체), 숫자 Inter/system. sidebar 240/72px, header 64px, 12–16px radius, spacing 4/8/12/16/24/32px, transition 150–250ms. `prefers-reduced-motion` 지원, 키보드·포커스·대비 검증.
++## 전역 구성
++좌측 8개 메뉴, 상단 통합검색/지역/산업/기간/알림, 우측 400–480px 드릴다운 패널. URL query에 필터·선택 엔티티 동기화; 뒤로가기·북마크 가능. 필터 변경은 지도·KPI·테이블·차트에 일관 적용. 데이터 신선도·출처·검증 상태 항상 접근 가능.
++## 8개 화면과 데이터 계약
++0 홈: KPI `/overview`, 대형 2D 지도 `/facilities`, 산업 비교 `/overview`, 위험 `/events`, 최근 기사 `/evidence/search`. 지도 60~65%, 보조 분석 35~40%; KPI 클릭 → 필터된 상세 화면.
++1 기업과 시설: 좌측 시설 지도 `/facilities`, 우측 관계 `/network`, 하단 `/companies` 테이블. 마커/노드/관계선 클릭 → `/detail` + 근거 패널.
++2 지역과 산업: 7+1 권역×13 산업 매트릭스, 셀 클릭→품목 8필러 `/products/{id}/brief` 및 `/alternatives`. CA 전체는 benchmark로 분리.
++3 수치 데이터: `/trade-stats`, 기간·단위·집계 기준별 시계열, 월간/누적/연간 혼합 차트 금지, 통화/환율 주석 표시.
++4 사건과 위험: `/events` 활성·과거 재연 분리, `/ews` 위험 테이블, 사건 스레드 타임라인, 변경 시 이유 기록.
++5 분석과 보고서: `/analyze`, `/network`, `/reports`; 좌측 조건, 중앙 위험 카드·경로, 우측 근거·추천·보고서 편집, HTML/PDF/DOCX 출력.
++6 자료와 근거: `/evidence/search`, `/search/query`; 키워드·자연어 패턴 검색, 출처 등급/검증 상태 필터, 검색 근거와 검색 한계 표시.
++7 관심 대상과 알림: `/reminders`, 관심 기업·품목, 규제 D-Day, 완료 상태 및 필터.
++별도 Admin: CSV preview→validate→commit, 수집 실행 기록, 검증 대기, 수정 이력, 시스템 상태, 운영 시 사용자 권한.
++## 지도 구현
++실제 GeoJSON 경계만 사용; EPSG:4326 원본 좌표를 지도 투영에 맞게 변환, 좌표 불명 시설은 지도에서 제외하고 목록에 별도 표시. pan/zoom, bbox 질의, cluster, 마커 hover/선택, 데이터량 많으면 서버 집계. GeoJSON·마커의 출처 메타 제공. 임의 도로·물류 회랑 선 작도 금지.
++## 네트워크 구현
++1–3 Hop, 방향 화살표, 공급/투자/제휴 엣지 타입별 스타일, 검증/미검증 실선·점선, 드래그/줌/포커스/선택경로 강조. 대규모 그래프는 초기 노드 수 제한과 점진적 확장. 관계 클릭 시 근거가 없으면 '확인되지 않음' 명시.
++## 상태 및 반응형
++모든 화면 loading skeleton, empty state, error+retry, partial+stale, no-permission, source-unverified 표시. 1440/1024/768/390px 검수; 좁은 화면은 사이드바 접고 차트/지도 단일 열 전환. 테이블 정렬/페이지네이션, 필터 초기화, 모달 ESC 닫기, 네트워크 키보드 대체 목록 제공.
++## 접근성·시각 검수
++텍스트 대비, 포커스 링, 화면읽기 label, hover-only 정보 금지, 과도한 모션 억제, 지도/그래프 텍스트 대체. 스크린샷 비교와 브라우저 E2E를 모두 수행.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/06_ANALYSIS_EWS.md b/docs/06_ANALYSIS_EWS.md
+new file mode 100644
+index 0000000..8d104f3
+--- /dev/null
++++ b/docs/06_ANALYSIS_EWS.md
+@@ -0,0 +1,22 @@
++# 06 분석 및 EWS 엔진
++## 책임 분리
++`GraphExplorer`는 확정된 방향성 관계로 1–3 Hop BFS 수행; `RiskEngine`은 사건/통계/규제·근거를 결합; `AlternativeFinder`는 HS 코드·산업·시설·역량 후보를 검색; `AnalysisRenderer`는 결과를 UI/보고서 공통 모델로 반환. `RuleEngine`과 `AIEngine`은 같은 interface를 구현.
++## 분석 대상
++company/facility/region/industry/product. 분석 요청에 기준 시점, 적용 데이터 스냅샷, 엔진 종류·버전 기록. 공급 관계와 투자·제휴는 서로 다른 edge semantics; 단순 연결을 인과관계로 단정하지 않음.
++## 3-Hop
++BFS 탐색 시 사이클 방지, 노드·엣지 최대 개수 제한, 양방향 검색은 명시적 요청일 때만, 관계 유효기간·검증 상태 필터. 경로마다 edge evidence, 관계 유형, hop, known/possible/hypothesis를 반환.
++## 초기 EWS(시연용 휴리스틱)
++점수는 심각도·노출도·연결거리 등을 이용해 0–100 범위의 단순 가중 합으로 계산할 수 있으나 **검증된 예측확률이 아님**. 가중치·임계값은 config에 둬서 교체 가능하게 한다. `normal/watch/caution/alert` 4단계. 근거 부족 시 점수 null/판단 보류 가능. `confidence`와 위험도를 별도 저장; 미검증 증거만으로 공식 alert 확정 금지.
++## 대체 공급처
++HS4/HS6 + 산업·지역 매칭으로 후보 검색. 각 후보에 `match_reasons`, `unknown_capabilities`, `evidence_ids`, `verification_status` 포함. 후보 추천은 실제 공급 가능·납기·생산능력 보장이 아님.
++## 표준 결과 모델
++`analysis_id, target, as_of, engine, engine_version, risk:{score,level,confidence,is_heuristic}, paths[], impacts[], evidence_ids[], alternatives[], recommendations[], warnings[], generated_at, dataset_snapshot_id`. 원문 인용·출처는 별도 provenance 링크.
++## 시각화·보고서
++위험 요약 카드, 영향 경로 네트워크, 근거 패널, 대응 후보, 보고서 작성으로 이어지는 흐름. verified/reported/unverified/estimated/synthetic를 명시하고 확인된 영향/잠재적 노출/분석 가설을 구분.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/07_REPORTING.md b/docs/07_REPORTING.md
+new file mode 100644
+index 0000000..6408e3d
+--- /dev/null
++++ b/docs/07_REPORTING.md
+@@ -0,0 +1,18 @@
++# 07 보고서·출력 명세
++## 보고서 3종
++`desk_briefing`(심층 기업·품목·위험·대응), `ews_monthly`(권역별 EWS·추세·차월 관찰), `kakao_insight`(짧은 메신저용 핵심 브리프). 초기에는 템플릿 작성, 최종에는 AI 전체 초안 작성. 두 엔진 모두 동일한 구조화 문서 모델 출력.
++## 공통 문서 모델
++`report_id, report_type, title, summary, sections[{heading,blocks[]}], tables[], charts[], citations[{evidence_id,source_id}], as_of, generated_at, engine, engine_version, dataset_snapshot_id, review_status, revision`. 인용 링크와 시각화 alt/caption 보존. 보고서에 내부 CO-/FAC- 식별자 직접 출력 금지.
++## 편집
++제목·본문·표·차트·출처 편집, 변경 전후 스냅샷, revision 낙관적 잠금. 승인 후 수정하면 needs_review. 초기 로컬은 draft와 자유로운 출력, 운영에서는 draft→needs_review→approved/rejected. 권한자만 승인.
++## 내보내기
++HTML은 독립형 문서(상대경로 자산 포함 또는 인라인). PDF는 페이지 분할·표 헤더 반복·한글 폰트 확인. DOCX는 제목 스타일·표·그림·각주/출처 표기. 3형식 모두 동일 데이터 스냅샷과 수치 사용. PDF/DOCX 구현에 필요한 경량 패키지 허용(버전 고정).
++## 검수
++세 템플릿×세 포맷 생성, 파일 열림·한글·표·차트·각주·페이지 넘침 확인, 출처 불명 배지 유지, 원본 데이터 업데이트 후 과거 보고서 불변성, 승인 후 수정 시 승인 해제 테스트.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/08_ADMIN_OPERATIONS.md b/docs/08_ADMIN_OPERATIONS.md
+new file mode 100644
+index 0000000..9734e97
+--- /dev/null
++++ b/docs/08_ADMIN_OPERATIONS.md
+@@ -0,0 +1,16 @@
++# 08 관리자 및 운영
++## 초기 로컬
++127.0.0.1 전용 서버, 인증 없음, 원격 접근 차단. 관리자에서 CSV 업로드 미리보기→스키마 검증→중복 매칭→커밋, 오류 CSV 다운로드, import 배치/원문/수정 이력 열람. 백업·복구 명령 제공.
++## 최종 배포
++KOTRA 직원은 담당 권한에 따라 데이터·경보·보고서 수정, 기업 사용자는 승인된 조회·분석 중심. role: viewer/company, analyst, editor, approver, admin. 서버에서 API별 RBAC 강제; UI 메뉴 숨김만으로 권한 통제 금지. 인증 세션, 비밀번호/SSO 선택, TLS, CSRF, CORS allowlist, 업로드 제한, rate limit, 감사 로그, 데이터 접근 정책 필수.
++## 수집 운영
++정기 스케줄러는 추후 연결. 작업 idempotent, 403/429/5xx 재시도 정책, 실패 시 기존 정상 데이터 유지, last_successful_run 및 stale 경고. 각 수집원의 허용 정책 준수. 중복 방지는 URL만이 아니라 콘텐츠 해시·엔티티 키·시점 조합 사용.
++## 복구·모니터링
++DB 크기, FTS 인덱스 상태, 수집 작업 성공률, 최근 갱신, raw 저장소 크기, 오류 로그, 백업 성공·복구 리허설. 데이터 삭제는 승인 및 복구 가능한 이력 필요.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/09_TEST_ACCEPTANCE.md b/docs/09_TEST_ACCEPTANCE.md
+new file mode 100644
+index 0000000..7509fd2
+--- /dev/null
++++ b/docs/09_TEST_ACCEPTANCE.md
+@@ -0,0 +1,22 @@
++# 09 검수 기준 및 자동화 테스트
++## 단계별 게이트
++P0 명세: 모든 API 요청·응답 예시, DDL, 데이터 사전, 화면 데이터 매핑, 원본과 충돌 목록 작성.
++P1 수집: 최소 각 핵심 도메인에 실제 출처 데이터 적재, source manifest/라이선스 기록, 중복/누락 보고, 재실행 idempotent.
++P2 DB: FK 위반 0, 필수키 누락 0, 유효하지 않은 좌표 표시 0, 카운티 benchmark 혼합 0, schema migration 반복 실행 성공.
++P3 API: 모든 endpoint의 성공/400/404/409/500 케이스, pagination, SQL injection 방지, 필터·정렬 일치, 0건 응답.
++P4 분석/보고: BFS cycle/방향/3-Hop 제한, 미검증 표시, 3종×3포맷 출력, 과거 재연 분리, 엔진 교체 계약.
++P5 UI: 8개 화면·관리자, 로딩/빈/오류/부분 성공, 모든 버튼 실제 동작, 필터 동기화, 지도/네트워크 상호작용, 390/768/1024/1440px 스크린샷 검수.
++P6 통합: 수집→정제→검색→분석→보고서 전체 E2E; 업로드 실패 롤백; 데이터 소스 갱신 후 검색 인덱스 갱신.
++## 성능(목표, 측정 전)
++100,000+ **합성 성능 테스트 레코드**(실데이터와 분리), 일반 검색 P95 ≤1초, 집계 API P95 ≤2초, 초기 화면 주요 콘텐츠 ≤3초. 환경 사양·동시성·쿼리·데이터 분포를 기록하고 실제 결과와 목표를 구분. 300k 이상 추가 시험 권장.
++## 시각 검수
++스크린샷 기반 정렬·가독성·폰트·차트 범례·모바일 오버플로·지도 좌표 검수. 사용자 작업 흐름 E2E: 홈→기업→시설→근거→분석→보고서→내보내기.
++## CI/산출물
++`python -m unittest discover -s tests` 및 브라우저 테스트 명령, 실패 로그, 데이터 품질 리포트, 성능 결과, 수동 검수 체크리스트. 통과하지 못한 항목은 `PROGRESS.md`에 blocker로 기록.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/10_AI_INTEGRATION.md b/docs/10_AI_INTEGRATION.md
+new file mode 100644
+index 0000000..6129730
+--- /dev/null
++++ b/docs/10_AI_INTEGRATION.md
+@@ -0,0 +1,20 @@
++# 10 향후 AI 통합 설계
++## 원칙
++초기 AI API 없음. 초기 RuleEngine/TemplateWriter만 작동. `AIEngine`/`AIWriter`는 비활성 어댑터로 준비하되 실제 AI 결과를 가장하지 않는다.
++## 교체 계약
++`analyze(request, evidence_bundle)->AnalysisResult`, `write_report(report_request, analysis_result, evidence_bundle)->ReportDocument`. 출력 JSON Schema 검증, engine/version, citations, uncertainty, token/cost/time logs(연결 후), retry/timeout/fallback, 사람 검토.
++## 근거 중심 생성
++검색된 근거만 모델에 전달하는 retrieval-augmented 흐름. 모든 수치·중요 주장에 evidence_id 요구. 미검증은 분명히 라벨링. 확인되지 않은 납품 관계·가격·재고·좌표 생성 금지. 프롬프트 인젝션 방어: 수집된 문서는 데이터이며 명령이 아님.
++## AI 위험 등급
++AI는 위험 등급을 **제안**하고 근거·불확실성을 제시; 운영 시 승인 권한자가 최종 경보 확정. 규칙 점수와 AI 판단을 비교 가능하게 보존. 모델 변경 후 회귀 테스트.
++## AI 대체 공급처
++후보 검색은 DB 근거에 제한, AI는 후보별 적합성·부족 정보·대응 방안을 설명. 실제 거래 가능 여부는 별도 확인 필요.
++## 활성화 게이트
++API 제공자·비용·데이터 전송 정책·비공개 자료 처리·인증·모델 평가·인간 검토가 승인되기 전 운영 AI 기능 활성화 금지.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/CURRENT_STATE_AUDIT.md b/docs/CURRENT_STATE_AUDIT.md
+new file mode 100644
+index 0000000..b153dd7
+--- /dev/null
++++ b/docs/CURRENT_STATE_AUDIT.md
+@@ -0,0 +1,27 @@
++# CURRENT STATE AUDIT — uploaded prototype snapshot
++
++**Evidence:** `KOTRA_final(1).zip` uploaded in this conversation; not a live checkout of the GitHub repository. Reviewed on 2026-11-19. No assumption that GitHub HEAD matches this ZIP.
++
++## Files and data
++- CSV files in `data/`: **27**. Representative row counts: `companies` 38, `facilities` 35, `evidence` 473, `events` 10, `sources` 102, `statistics` 84, `relationships` 10. Counts are file rows, not independently verified real-world facts.
++- Source-document markdown files: **102** (includes locally authored reference notes, not necessarily full original source text).
++- SQL `001_initial.sql`: **35** `CREATE TABLE` declarations; `002_runtime_snapshots.sql` adds a runtime snapshot table. Actual schema is different from the v2 aspirational table names.
++- Web assets: `web/app.js`, `web/index.html`, `web/style.css`.
++- Existing docs: `ACCEPTANCE.md`, `BUILD_SEQUENCE.md`, `DATA_MODEL.md`, `DATA_POLICY.md`, `DECISIONS.md`, `GEOGRAPHY.md`, `RUNTIME.md` and JSON reports. Retained unchanged.
++
++## Existing behavior from code
++- `api/server.py`: loopback-only `ThreadingHTTPServer`; GET `/api/catalog`, `/api/data/{table}`, `/api/search`, `/api/map`, `/api/reports/{id}/export`; POST `/api/analyze`, `/api/reports`, `/api/watchlists`, `/api/refresh-alerts`, `/api/ingest/usgs`, `/api/reports/{id}/review`; PATCH `/api/reports/{id}`, `/api/alerts/{id}`.
++- `query_data` currently materializes all rows in Python and filters/paginates afterward: scalability issue for hundreds of thousands of records.
++- `query_data` explicitly includes Bay9 when North CA is selected for display; this conflicts with new nonoverlapping 22-county North CA definition. **Block geographic aggregations until fixed.**
++- AI-related code exists according to README, but live external model behavior was not tested.
++- GIS: README describes empty geography boundaries and only four verified facility points; verify live before any map-completeness claim.
++- Automatic collector: USGS implemented; other sources are primarily configured/cataloged, not all automated.
++- `.gitignore` in uploaded ZIP excluded `web/index.html`, `web/app.js`, `web/style.css` (!). Updated in this patch to allow frontend tracking. Check `git ls-files web` in actual repo.
++
++## Tests executed in this workspace
++- `python run.py validate`: `{"errors": [], "valid": true}`.
++- `python -m unittest discover -s tests -v`: **10 tests, all passed** (1.461s in this environment).
++- No visual browser QA, production security audit, high-volume load test, PDF/DOCX export verification, or live source refresh was performed.
++
++## Not verified
++- GitHub repository HEAD, commit history, previously tracked sensitive files, permissions, actual server deployment, and completeness/licensing of source datasets.
+diff --git a/docs/DEVELOPMENT_ROADMAP.md b/docs/DEVELOPMENT_ROADMAP.md
+new file mode 100644
+index 0000000..e5a4c61
+--- /dev/null
++++ b/docs/DEVELOPMENT_ROADMAP.md
+@@ -0,0 +1,13 @@
++# 개발 로드맵
++| Phase | 순서 | 핵심 산출물 | 완료 게이트 |
++|---|---|---|---|
++| 00 | 설계 고정 | SQL DDL, 데이터 사전, API schema, 테스트 계획 | 문서 모순 해소 |
++| 01 | 대규모 실제 데이터 | source catalog, raw/staging/curated, provenance | 출처·수집 이력 검증 |
++| 02 | DB/FTS | migrations, indexes, loader, validate CLI | FK/중복/검색 통과 |
++| 03 | 백엔드 | REST API, pagination, search, admin import | 계약 테스트 통과 |
++| 04 | 분석·보고 | BFS, EWS rule, alternatives, 3종×3포맷 | E2E 분석/출력 통과 |
++| 05 | 프론트엔드 | 디자인 시스템, 홈+7화면, 지도·네트워크 | 브라우저·시각 검수 |
++| 06 | 관리자·통합 QA | CSV 관리, 이력, 성능/접근성 | P0/P1 통과 |
++| 07 | 향후 운영 | AI, 스케줄러, 로그인/RBAC, 배포 | 별도 운영 승인 |
++
++각 Phase를 작은 티켓으로 나눠 **한 티켓에 하나의 검증 가능한 변경**만 적용. 실패한 테스트를 우회하는 목 데이터·조건문을 금지. 실제 확보 데이터량과 진행률은 매 작업 후 기록.
+diff --git a/docs/GAP_ANALYSIS.md b/docs/GAP_ANALYSIS.md
+new file mode 100644
+index 0000000..4b88768
+--- /dev/null
++++ b/docs/GAP_ANALYSIS.md
+@@ -0,0 +1,23 @@
++# GAP ANALYSIS — existing prototype vs v2 target
++
++| Area | Existing prototype | v2 target | Priority / action |
++|---|---|---|---|
++| Database | Existing schema and 27 CSVs; `001_initial.sql` plus snapshot migration | Extensible raw/staging/curated, verification and import audit | P0: map current schema before additive migrations |
++| Geography | North CA unresolved; server includes Bay9 in North display | Project-defined 22 North counties disjoint from Bay9, CA statewide benchmark | **P0: reconcile geography definitions and FIPS with authoritative source before implementation** |
++| Search | `/api/search` plus generic row filtering | indexed unified search, constrained natural-language parsing, provenance | P1: contract and indexes; no claim of LLM search without model |
++| API | Implemented local routes differ from v2 target route list | documented schemas, stable errors, pagination and admin APIs | P0: route inventory and compatibility mapping |
++| Data scale | Generic endpoint loads full tables into memory | hundreds of thousands of records | P0: SQL-side filtering and keyset/offset pagination; benchmark |
++| Frontend | Existing local UI, no verified modern hybrid home | 8 screens + admin, responsive, real map/graph | P1: preserve working views, add home and components incrementally |
++| GIS | GeoJSON boundary acquisition incomplete | verified county geometry and marker clustering | P1: source licensed geometry and QA |
++| Analysis | Existing analysis/report/watchlist/alerts | 3-hop graph, separated confidence, replaceable AI | P1: inventory existing algorithms, add versioned output schema |
++| Reports | Existing HTML export, edit/review workflow | HTML/PDF/DOCX, eventual AI writing | P1: shared document model, actual format tests |
++| Collection | USGS collector; catalog of other sources | large provenance-aware bulk datasets, later scheduled updates | P0: source catalog and raw manifests, batch collection |
++| Roles | local single-operator mode | staff vs business roles, eventual approval | P2: no public deployment before auth/RBAC |
++| Tests | 10 unittest cases pass | integration, E2E, visual, data integrity, load tests | P0: preserve baseline and add regression suite |
++
++## Explicit reconciliation rules
++- The v2 master document is a **target**, not a statement that all features exist. Existing README and tests describe the prototype.
++- v2's proposed 22-county North CA definition conflicts with the prototype's unresolved 40-county assumption and Bay9 union behavior. This is a blocking specification decision to verify, not an already migrated database.
++- Original KOTRA specification's 35-table count does not describe the current SQL schema; use migration inventory as current truth.
++- Current source notes are not guaranteed to contain licensed full-text originals.
++- Never count unverified claims as independently confirmed supply-chain edges.
+diff --git a/docs/MASTER_SPEC.md b/docs/MASTER_SPEC.md
+new file mode 100644
+index 0000000..739236e
+--- /dev/null
++++ b/docs/MASTER_SPEC.md
+@@ -0,0 +1,54 @@
++# KOTRA Supply Chain Intelligence — MASTER SPEC v2.0
++
++## 0. 문서 지위 및 범위
++이 문서는 2026-11-19까지 합의한 Q1–Q44의 의사결정에 기반한 **구현 목표 명세**다. 본 문서는 목표 명세이며 실제 구현 상태는 `CURRENT_STATE_AUDIT.md`를 참조한다. 업로드된 기존 프로토타입에는 소스·CSV·원문 메모·테스트가 존재하며, 이 문서의 모든 목표가 구현되었다는 뜻은 아니다. 원본 `ORIGINAL_kotra.md`의 7+1 권역, 13개 산업, 공급망 3-Hop, 4단계 EWS, 3종 보고서, 원문 근거 추적을 유지한다. 초기에는 고품질 시연용 로컬 시스템, 최종에는 KOTRA 직원과 한국 기업 관계자용 운영 플랫폼을 지향한다.
++
++## 1. 불변 요구사항
++1. 스택: Python + SQLite + Vanilla JS. 필요한 출력 라이브러리 등은 예외적으로 명시·잠금 가능.
++2. 구현 순서: 실제 데이터 수집·DB → 백엔드 → 프론트엔드. AI에게는 작고 검증 가능한 단위로 작업 배정.
++3. 데이터: 공개 자료를 최대한 폭넓게 수집. 수십만 레코드 수준의 확장성을 고려하되 확보량을 보장하지 않음. 최신 현황과 장기 시계열을 병행.
++4. 범위: WA, OR, ID, MT, AK, 북부 CA 22카운티, Bay Area 9카운티; CA 전체는 벤치마크 전용. 13개 산업 유지.
++5. 데이터 상태: verified / reported / unverified / estimated / synthetic; 근거 출처 등급 1–4와 독립적으로 관리. 원문/수집/정제 계층 분리.
++6. UI: Modern Hybrid, 종합 홈 + 원본 7개 화면, 별도 관리자. 2D GeoJSON 지도·클러스터·필터, 인터랙티브 3-Hop 네트워크, 상세 드릴다운, 부드러운 전환.
++7. 분석: 기업·시설·지역·산업·품목; BFS 경로 추적과 규칙 기반 초기 EWS, 최종 LLM 어댑터. 미검증 근거 포함 시 별도 경고. 대체 공급처는 초기 후보 제시, 최종 AI 추천.
++8. 보고서: 초기 템플릿/편집, 최종 AI 작성. HTML/PDF/DOCX 지원. 초기 승인 생략, 운영 시 승인 워크플로우.
++9. 운영: 초기 로그인 없는 loopback 전용 로컬 개발. 배포 전 인증/RBAC/보안 검증 필수. 최종 자동 정기 수집 지원.
++10. 품질: 실제 데이터·출처·기능·디자인·성능·자동화 테스트 모두 필수.
++
++## 2. 시스템 데이터 흐름
++공개 데이터/파일 → 수집 매니페스트 → 원문 보존(raw) → 정제·매칭·검증(staging) → 정규화 SQLite(curated) → FTS5/집계 → Python REST → Vanilla JS 8개 화면 → 분석/보고서. AI는 분석·작성 인터페이스 뒤에 위치하며 초기 실행 경로의 필수 의존성이 아니다.
++
++## 3. 핵심 구현 계약
++- 데이터 계약: `03_DATABASE_SCHEMA.md`, `02_DATA_COLLECTION.md`.
++- API 계약: `04_API_CONTRACTS.md`. 공통 오류 형식과 페이지네이션 의무화.
++- UI 계약: `05_UI_UX_DESIGN.md`. 각 화면의 empty/loading/error/partial 상태 구현.
++- 분석 계약: `06_ANALYSIS_EWS.md`; 보고서 계약: `07_REPORTING.md`.
++- 보안·운영: `08_ADMIN_OPERATIONS.md`; 검수: `09_TEST_ACCEPTANCE.md`.
++- LLM 교체: `10_AI_INTEGRATION.md`.
++
++## 4. 원본과 충돌하는 지점의 결정
++- 원본 '35개 테이블'은 집계 목록에서 `users_roles`가 추가 표기되어 수치 불일치. v2에서는 고정 테이블 수를 요구하지 않으며 SQL DDL을 유일한 진실 공급원으로 사용한다.
++- 원본 27 CSV/102 원문/473 근거는 명세 수량이다. 업로드된 프로토타입에서 CSV 파일과 원문 메모의 존재를 확인했지만, 각 기록의 독립적인 사실성·출처 정확성은 별도 검증이 필요하다.
++- 원본 15개 수집 채널은 목표 소스 카탈로그. 초기 필수 자동 API 연결이 아님.
++- 원본 단일 `web/app.js`는 화면별 모듈로 분리. 메인 화면은 홈 추가로 8개.
++- 원본 20 API 라우트는 기준점이며 검색·업로드·보고서 목록·관리 API 추가 허용.
++- 원본 `http.server` 기반 로컬 서비스는 운영 배포를 전제로 보안성 검토·대체 필요. 표준 라이브러리 선호가 보안 요건보다 우선하지 않음.
++
++## 5. 우선순위 및 완료 정의
++P0: 실데이터 수집·무결성·검색·지도·8개 화면·분석·3종 보고서 출력·자동 테스트.
++P1: 관리자 대량 업로드·이력·시각 품질·수십만 건 성능.
++P2(최종 운영): AI API·정기 수집·인증/RBAC·승인 워크플로우·서버 배포.
++초기 완료는 P0/P1 계약을 통과한 상태이며 P2는 인터페이스·비활성 UI·테스트 더블까지 준비한다.
++
++## 6. 개발 진행 원칙
++각 작업 시작 시 `TASKS.md` 확인 → 최소 변경 → 테스트 실행 → 결과·미해결 사항 `PROGRESS.md` 기록. 스키마 변경은 마이그레이션과 데이터 사전 동시 갱신. 보고서·분석 결과는 데이터 스냅샷, 생성 엔진 및 근거 식별자를 보존.
++
++## 7. 미확정 사항을 처리하는 기본값
++기본 언어 한국어(영문 기업명 병기), 시간 UTC 저장/화면 현지 변환, 금액 원 단위·통화·기준연도 명시, CSV UTF-8, API JSON, ID는 내부에서만 사용. 원본 소스 라이선스 확인 전 전문 재배포 금지. 북부 CA 22카운티는 프로젝트 자체 정의이며 공식 KOTRA 관할을 뜻하지 않는다.
++
++## 공통 구현 규칙
++- Python 3.11+ / SQLite(FTS5) / HTML·CSS·Vanilla JavaScript. 초기 로컬 개발, 이후 배포.
++- 원본 명세는 `../ORIGINAL_kotra.md`; 이 패키지는 1~7단계 합의 사항을 반영한 개정 설계. 원본과 충돌하면 `MASTER_SPEC.md`의 결정 로그 및 본 문서의 명시적 계약 우선.
++- 수집되지 않은 자료를 확보했다고 주장하지 말 것. 예시·테스트·합성 데이터는 실제 데이터와 물리적/논리적으로 구분.
++- 기능 미구현 시 가짜 성공 화면을 만들지 말고 명확한 비활성 상태·오류를 제공.
++- 모든 신규 데이터의 출처/수집 시각/검증 상태를 추적. 검증 불가 데이터는 탐색 가능하되 확정 사실로 표시하지 않음.
+diff --git a/docs/ORIGINAL_kotra.md b/docs/ORIGINAL_kotra.md
+new file mode 100644
+index 0000000..76aee06
+--- /dev/null
++++ b/docs/ORIGINAL_kotra.md
+@@ -0,0 +1,253 @@
++# KOTRA 미국 서북부 공급망·통상 위험 대응 시스템 — 통합 시스템 및 UI 상세 설계 명세서 (Complete Specification)
++
++## 1. 시스템 비전 및 도메인 분석 범위
++
++### 1.1 추진 배경 및 핵심 목적
++본 시스템은 **KOTRA 실리콘밸리 무역관 관할 미국 서북부 권역**의 핵심 산업 클러스터, 주요 기업, 물류 인프라, 통상·규제 환경, 자연재해 및 노사 분규 등 공급망 교란 요인을 통합 수집·추적하여 **한국 진출 기업과 본사 의사결정권자에게 조기경보(EWS) 및 인과관계 기반 대응 전략을 제공**하기 위해 설계되었습니다.
++
++### 1.2 공간적 분석 범위 (7대 우선 권역 + 1개 비교 기준 권역)
++관할 구역의 산업·물류 특성을 정밀하게 반영하기 위해 주(State) 단위와 핵심 경제권(Sub-state)을 구분하여 총 **7개 우선 조사 권역**과 **1개 비교 기준 권역**으로 계층화합니다.
++
++| 권역 코드 | 권역명 (한글) | 권역명 (영문) | 설계 구분 및 주요 모니터링 대상 |
++| :--- | :--- | :--- | :--- |
++| `US-WA` | 워싱턴주 | Washington | 항공우주(Boeing), 클라우드/AI(Microsoft·Amazon), 시애틀·타코마 항만(NWSA), 농수산·임업 |
++| `US-OR` | 오리건주 | Oregon | 반도체 R&D·제조 클러스터(Silicon Forest, Intel), 포토닉스·광학, 임산업, 포틀랜드 항만·물류 |
++| `US-ID` | 아이다호주 | Idaho | 메모리 반도체(Micron), 핵심광물(코발트·안티모니 등), 감자·낙농 등 농식품 |
++| `US-MT` | 몬태나주 | Montana | 광업·핵심광물(백금족·희토류), 석유·가스·전력 에너지, 대륙횡단 철도 물류 회랑 |
++| `US-AK` | 알래스카주 | Alaska | 수산업(명태·연어 등), 석유·가스·광물, 앵커리지 국제 항공화물 허브, 북극항로 |
++| `US-CA-NORTH` | 북부 캘리포니아 | Northern California | 실리콘밸리 외곽 첨단제조·에너지·농식품·산불 영향권 (베이지역 9개 카운티와 분리 관리) |
++| `US-CA-BAY9` | 베이지역 9개 카운티 | San Francisco Bay Area (9 Counties) | AI·ICT·반도체 설계·바이오 클러스터, 오클랜드 항만, 한국 기업 R&D·법인 밀집지 |
++| `US-CA` | 캘리포니아주 전체 | California (Statewide Benchmark) | **비교 기준 권역(Benchmark)** — 주 단위 거시통계 대조 전용 (`US-CA-NORTH`·`US-CA-BAY9`와 합산·대입 금지) |
++
++### 1.3 산업적 분석 범위 (13개 표준 산업 분류)
++모든 기업, 시설, 품목, 사건, 규제, 지표 데이터는 아래 **13개 표준 산업 코드**로 일관되게 정규화합니다.
++1. **반도체** (Semiconductors)
++2. **AI·ICT** (AI & Information/Communications Technology)
++3. **항공우주** (Aerospace & Defense)
++4. **바이오·헬스** (Bio & Healthcare)
++5. **포토닉스·광학** (Photonics & Optics)
++6. **첨단·일반 제조** (Advanced & General Manufacturing)
++7. **석유·가스** (Oil & Gas)
++8. **광업·핵심광물** (Mining & Critical Minerals)
++9. **전력·재생에너지** (Electric Power & Renewable Energy)
++10. **임산업** (Forestry & Wood Products)
++11. **농식품** (Agri-Food)
++12. **수산** (Fisheries & Seafood)
++13. **물류·항만** (Logistics, Ports & Corridors)
++
++### 1.4 핵심 추적 대상 한국 기업 및 가치사슬 구조
++* **주요 한국 기업**: 삼성전자(`CO-SAMSUNG`), SK하이닉스(`CO-SKHYNIX`), 대한항공(`CO-KOREANAIR`), 한국항공우주산업(`CO-KAI`) 등 서북부 권역 내 현지 법인·R&D 센터, 핵심 고객사(Boeing, Intel, Micron, NVIDIA, Amazon, Microsoft 등), 원자재·장비·물류 파트너를 보유한 기업.
++* **추적 경로**: 한국 기업 $\rightarrow$ 미국 서북부 1·2·3차 거래처 및 투자 거점 $\rightarrow$ 현지 공장·광산·항만·철도·공항 시설 $\rightarrow$ 권역별 재해·파업·통상·규제 이벤트.
++
++---
++
++## 2. 전체 시스템 아키텍처 및 패키지 청사진
++
++### 2.1 핵심 설계 원칙
++* **무의존·자립형 포터블 구조 (Zero-Bloat Portable Architecture)**: 외부 상용 DB나 무거운 런타임 없이 Python 표준 라이브러리(`http.server`, `sqlite3`, `json`, `csv`, `hashlib`, `urllib`, `re`)와 내장 SQLite FTS5 엔진만으로 즉시 구동·이관 가능하도록 설계합니다.
++* **단일 진실 공급원 (Single Source of Truth)**: 기준 마스터 CSV(`data/*.csv`)와 원문 대조 메모(`source_documents/*.md`)를 적재기(`run.py init`)로 검증·정규화하여 SQLite DB(`runtime/kotra.sqlite`) 및 하이브리드 검색 인덱스(`search_index/`)를 생성합니다.
++* **완전한 감사 추적성 (Full Auditability)**: 레코드 수정, EWS 등급 변경, 보고서 편집·승인 이력은 모두 버전 테이블(`record_versions`)과 검토 이력(`report_reviews`)에 스냅샷으로 보존됩니다.
++
++### 2.2 표준 디렉터리 구조 (`KOTRA_final/`)
++```text
++KOTRA_final/
++├── run.py                  # 통합 CLI 진입점 (init, validate, index, serve, collect-usgs)
++├── api/                    # 백엔드 HTTP 서버, 라우터, 비즈니스 로직, SQLite 저장소
++│   ├── server.py           # 20개 REST API 엔드포인트 라우터 및 정적 웹 서빙
++│   ├── store.py            # SQLite 트랜잭션, 버전 이력, FTS5/Unicode 하이브리드 검색
++│   └── services.py         # 도메인 분석·EWS·스크랩 병합·보고서·가드레일 서비스 엔진
++├── web/                    # 프론트엔드 SPA (7대 화면, SVG 지도·네트워크, 모달, 보고서 에디터)
++│   ├── index.html          # 단일 페이지 앱 골격 및 모달·템플릿 컨테이너
++│   ├── styles.css          # 대시보드 그리드, 상태 배지, SVG 그래프, 인쇄 스타일시트
++│   └── app.js              # 상태 관리, API 클라이언트, 7개 탭 렌더러, SVG 시각화 엔진
++├── data/                   # 27종 기준 마스터 CSV 및 데이터 사전(data_dictionary.csv)
++├── db/
++│   └── migrations/         # 35개 테이블 및 FTS5 가상 테이블 DDL 정의 SQL
++├── ingest/                 # CSV 적재기, SHA-256/외래키 검증기, 외부 피드·API 수집기
++├── source_documents/       # 102건 원문 대조 메모(.md) 및 SHA-256 무결성 해시 원천 자료
++├── report_templates/       # HTML 보고서 템플릿 3종 (report.html, ews_monthly.html, kakao_insight.html)
++├── scripts/                # GeoJSON 경계 수집(fetch_geographies.py) 및 보조 유틸리티
++├── docs/                   # 검수 기준(ACCEPTANCE.md), 빌드 순서, 검증 결과 문서
++├── examples/               # 실제 사례 기반 출력 예시 (korean_air_report.html 등)
++├── tests/                  # 단위·무결성 테스트(test_runtime.py) 및 E2E 테스트(test_e2e_browser.py)
++├── runtime/                # 런타임 SQLite DB (kotra.sqlite)
++└── search_index/           # 청크 직렬화(document_chunks.jsonl) 및 매니페스트
++```
++
++---
++
++## 3. 전체 기사 및 외부 데이터 수집 파이프라인 설계
++
++### 3.1 다채널 수집원 아키텍처 (15개 수집 채널)
++시스템은 공공 통계·재난 피드·통상 DB의 **자동 수집 파이프라인**과 무역관 현장 모니터링·언론 기사의 **수동 스크랩 파이프라인**을 결합하여 운영합니다. (`collection_sources.csv` 기준 15개 채널 관리)
++
++| 채널 구분 | 대상 기관 / 매체 | 수집 방식 | 수집 주기 | 주요 적재 테이블 |
++| :--- | :--- | :--- | :--- | :--- |
++| **기상·재난·지질 (3종)** | NWS(국립기상청), USGS(지질조사국 지진·수문), FEMA(재난관리청) | REST/GeoJSON 자동 수집 (`urllib` + 표준 `User-Agent`) | 일 1회 / 특보 시 | `events`, `event_impacts` |
++| **법령·관세·공시 (2종)** | Federal Register(연방관보), SEC EDGAR(10-K/8-K 공시) | API/피드 자동 수집 및 키워드 필터링 | 일 1회 | `regulations`, `companies`, `evidence` |
++| **거시·고용·무역 (4종)** | U.S. Census Bureau, BLS QCEW, BEA 지역 GDP, USDA 농무부 | 분기·월간 통계 API / CSV 배치 적재 | 월간 / 분기별 | `trade_stats`, `macro_indicators` |
++| **에너지·수산·항만 (3종)** | EIA(에너지정보청), NOAA(해양대기청), NWSA(북서부항만동맹) | 통계 피드 및 항만 물동량 스냅샷 적재 | 월간 | `macro_indicators`, `facilities` |
++| **언론·업계·현장 (3종)** | 주요 경제지(Reuters, Bloomberg, Seattle Times), 전문지, 무역관 현장 제보 | 담당자 수동 스크랩 입력(`POST /api/scraps`) 및 원문 메모 등록 | 수시 (실시간) | `events`, `evidence`, `source_documents` |
++
++### 3.2 기사 스크랩 등록 및 동일 사건 스레드 자동 병합 (`create_scrap`)
++담당자가 새로운 뉴스 기사나 현장 동향을 등록할 때 사건이 파편화되지 않도록 **사건 스레드 병합(Event Thread Merging)** 알고리즘을 수행합니다.
++
++1. **서지 메타데이터 자동 검증 (`missing_metadata_fields`)**:
++   * 입력 페이로드에서 `title`, `url`, `publisher`, `published_at`, `region_id`, `industry_id`, `excerpt`, `evidence_tier`를 검사합니다.
++   * 언론사명(`publisher`), 발행일(`published_at`), 원문 링크(`url`) 등 필수 서지 항목이 누락된 경우 저장은 허용하되 응답 객체의 `missing_metadata_fields` 배열에 누락 필드명을 기록하고 UI에 보완 배지를 표시합니다.
++2. **동일 사건 스레드 탐색 및 자동 병합 (`event_thread_id`)**:
++   * 입력값에 `event_thread_id`가 명시되었거나, 동일 권역(`region_id`)·산업(`industry_id`) 내 최근 30일 이내 활성 사건 중 제목·핵심 키워드 유사도가 임계치를 넘는 기존 `events` 레코드가 존재할 경우 신규 사건을 중복 생성하지 않습니다.
++   * 대신 기존 사건의 `events.summary` 타임라인에 후속 경과를 누적 병합하고, 신규 기사 발췌문(`evidence`)과 원문 출처(`source_documents`)를 해당 `event_id`에 하위 근거로 연결합니다.
++   * 기존 사건의 심각도가 상승한 경우(`severity` 상향) 연관된 `ews_status` 검토 알림을 자동 생성합니다.
++
++### 3.3 중복 제거, 장애 격리 및 원문 무결성 검증
++* **중복 방지 (Idempotency)**: `source_documents` 적재 시 원문 본문 또는 URL 정규화 문자열의 `SHA-256` 해시를 계산하여 동일 해시가 이미 존재하면 중복 적재를 건너뛰고 기존 `source_id`를 재사용합니다.
++* **장애 격리 (Fault Isolation via `ingestion_runs`)**:
++  * 외부 API 호출 시 HTTP 403/429/5xx 오류, 네트워크 타임아웃, API 키 미설정 등이 발생하더라도 기존 DB의 정상 데이터를 삭제하거나 '사건 0건'으로 덮어쓰지 않습니다.
++  * 모든 수집 배치는 `ingestion_runs` 테이블에 `run_id`, `source_code`, `started_at`, `finished_at`, `status`(`success` | `partial` | `failed`), `records_inserted`, `error_message`를 기록하며 트랜잭션 단위로 롤백·격리됩니다.
++* **원문 대조 해시 검증 (`run.py validate`)**: `source_documents/` 디렉터리의 102개 원문 대조 메모(`.md`)의 실제 파일 `SHA-256` 해시와 `data/source_documents.csv`에 기록된 해시값을 전수 대조하여 위·변조 및 누락을 0건으로 통제합니다.
++
++---
++
++## 4. 관계형 데이터베이스(35개 테이블) 및 하이브리드 검색 설계
++
++### 4.1 35개 SQLite 테이블 도메인별 구조
++`db/migrations/`의 DDL 스크립트는 27종 기준 CSV와 런타임 상태 데이터를 수용하기 위해 총 **35개 테이블**로 정규화됩니다.
++
++| 도메인 영역 | 테이블 목록 (총 35개) | 핵심 설계 역할 및 제약조건 |
++| :--- | :--- | :--- |
++| **1. 공간·산업·지표 기준 (5개)** | `regions`, `geographies`, `industries`, `metric_definitions`, `collection_sources` | 7+1 권역 계층(`parent_region_id`), GeoJSON 경계 메타, 13개 산업 코드, 지표 단위·집계 기준, 15개 수집원 정의 |
++| **2. 기업·거점·공급망 (7개)** | `companies`, `company_regions`, `facilities`, `products`, `product_hs_codes`, `supply_edges`, `logistics_corridors` | 한국/미국 기업 마스터, 권역별 활동 역할, 검증 좌표 기반 시설(`port`, `rail_terminal`, `airport`, `fab`, `mine`), HS4/HS6 품목, 방향성 공급망 엣지(`relationship_type`, `tier`) |
++| **3. 사건·위험·규제 (6개)** | `events`, `event_impacts`, `event_timeline`, `regulations`, `regulation_impacts`, `tariff_schedules` | 재해·파업·통상 사건(`is_replay`, `event_thread_id`), 권역·산업·기업별 파급효과, 법령·관세 발표일(`announced_date`)·시행일(`effective_date`) |
++| **4. 조기경보·알림 (4개)** | `ews_status`, `ews_history`, `watchlist_items`, `watchlist_reminders` | 권역×산업/품목 EWS 4단계 등급(`alert`, `caution`, `watch`, `normal`), `escalate_next_month`, `remind_at`, 규제 D-Day 알림 |
++| **5. 통계·정량 지표 (4개)** | `trade_stats`, `macro_indicators`, `commodity_prices`, `port_metrics` | 교역액·물동량·고용·에너지 통계, `aggregation_basis` 4종(`monthly`, `cumulative`, `annual`, `point_in_time`), 환율 주석(`fx_impact_note`) |
++| **6. 근거·원문·수집이력 (5개)** | `source_documents`, `evidence`, `entity_evidence_map`, `ingestion_runs`, `search_chunks` | 원문 경로 및 `sha256`, 발췌문(`excerpt`), 근거 신뢰도(`evidence_tier` 1\~4등급), 엔티티 다대다 매핑, 배치 수집 로그, 검색 청크 |
++| **7. 분석·보고·거버넌스 (4개)** | `analysis_runs`, `reports`, `report_reviews`, `record_versions` (+ `users_roles`) | 5단계 인과분석 결과 스냅샷, 편집 가능한 보고서 초안, 승인/수정요청/반려 이력, 전 테이블 감사 버전 이력, 사용자 역할 |
++
++### 4.2 근거 신뢰도 4등급 분류 체계
++* **1등급 (공식 통계·법령·공시)**: 연방·주 정부 기관(Census, BEA, BLS, EIA, USGS, Federal Register), 상장사 SEC 공시.
++* **2등급 (기관·산업협회 보고서)**: KOTRA 해외시장뉴스, 반도체·항공·항만 협회 공식 발표, 공공 항만청(NWSA 등) 리포트.
++* **3등급 (주요 언론·전문지 보도)**: 로이터, 블룸버그, 시애틀타임스 등 복수 교차 검증된 주요 경제·산업 매체.
++* **4등급 (현장 스크랩·담당자 제보)**: 무역관 현장 모니터링, 기업 인터뷰, 미확인 초기 속보(`missing_metadata_fields` 점검 대상).
++
++### 4.3 하이브리드 검색 인덱스 (`search_index` + FTS5)
++* `run.py index` 실행 시 `evidence`, `events`, `regulations`, `source_documents`의 텍스트를 청킹하여 `search_index/document_chunks.jsonl`에 직렬화하고 SQLite `FTS5` 가상 테이블(`search_chunks_fts`)을 구축합니다.
++* 영문 형태소 매칭은 `FTS5`를 우선 사용하고, 한국어 조사·부분일치 및 한·영 기업명 교차 조회(`보잉` $\leftrightarrow$ `Boeing`, `삼성` $\leftrightarrow$ `Samsung`, `하이닉스` $\leftrightarrow$ `SK hynix`, `대한항공` $\leftrightarrow$ `Korean Air`, `마이크론` $\leftrightarrow$ `Micron`, `인텔` $\leftrightarrow$ `Intel`)를 위해 Unicode 부분일치 및 동의어 확장 쿼리를 결합합니다.
++
++---
++
++## 5. 백엔드 비즈니스 엔진 및 20개 REST API 계약
++
++### 5.1 핵심 분석 알고리즘 3종
++1. **품목 8대 필러 브리프 (`get_product_brief`)**:
++   * 선택 품목을 **①개요·HS코드 ②서북부 생산·교역 ③밸류체인·주요기업 ④한국 기업 연관성 ⑤가격·수급 동향 ⑥물류·통관 병목 ⑦규제·보조금 환경 ⑧종합 리스크 및 미국 현지 대체 공급처(`get_alternatives`)**의 8개 필러로 구조화합니다.
++   * **가격·수급 분기 로직**: `product_category == 'raw_material'`(원자재)인 경우 공개 국제 시세를 표기하고, 소재·부품·완제품(`component`, `finished`)인 경우 비공개 B2B 단가를 추정하지 않고 설비투자(CapEx)·고용·교역량 프록시 지표를 제시합니다.
++2. **3-Hop 공급망 역추적(BFS) 및 5단계 인과분석 (`analyze`)**:
++   * 한국 기업 노드에서 출발하여 `supply_edges`를 따라 최대 3단계(1-Hop 직접 거래처 $\rightarrow$ 2-Hop 하위 부품·물류 거점 $\rightarrow$ 3-Hop 원재료·인프라)까지 너비 우선 탐색(BFS)을 수행합니다.
++   * 탐색된 경로와 대상 사건/규제를 결합하여 **①직접 영향 $\rightarrow$ ②간접·경합 효과 $\rightarrow$ ③근거 4등급 분류 $\rightarrow$ ④데이터 가드레일 주석 $\rightarrow$ ⑤역할별(본사·현지법인·무역관) 대응안**의 5단계 구조화 보고서를 생성합니다.
++3. **EWS 4단계 트리아지 및 D-Day 리마인더 (`get_ews`, `get_reminders`)**:
++   * `alert`(경보) $\rightarrow$ `caution`(주의) $\rightarrow$ `watch`(관찰) $\rightarrow$ `normal`(정상) 순으로 우선순위를 정렬하며, 규제 발표일과 시행일 간 잔여 일수(D-Day) 및 `escalate_next_month` 플래그를 자동 계산합니다.
++
++### 5.2 주요 REST API 엔드포인트 명세 (20개 라우트)
++
++| 그룹 | HTTP 메서드 및 경로 | 주요 기능 및 요청/응답 계약 |
++| :--- | :--- | :--- |
++| **기준·현황** | `GET /api/catalog` | 7+1 권역, 13개 산업, 품목, 한국 기업, 지표 정의 마스터 카탈로그 반환 |
++| | `GET /api/overview` | 상단 KPI 요약, EWS 긴급 트리아지 큐, 7대 권역 요약, 캘리포니아 분리 주석 반환 |
++| | `GET /api/reminders` | 관심목록 리마인더 + 규제 시행 D-Day + 프로젝트 목표가동일 큐 반환 |
++| **기업·시설** | `GET /api/companies` | 권역·산업·국가별 기업 목록 조회 (`?region_id=&industry_id=&q=`) |
++| | `GET /api/facilities` | 검증된 위·경도 좌표를 보유한 시설 마커 목록 반환 (지도 렌더링용) |
++| | `GET /api/network` | 기업 간 방향성 관계 그래프(`nodes`, `edges`, `relationship_type`) 및 3-Hop 경로 반환 |
++| **품목·물류** | `GET /api/products/{product_id}/brief` | 품목 8대 필러 브리프 및 시세/프록시 분기 데이터 반환 |
++| | `GET /api/alternatives` | HS4·산업·권역 기준 미국 현지 대체 공급처 매트릭스 반환 |
++| | `GET /api/logistics` | 해상 항만(`port`, `port_terminal`), 철도(`rail_terminal`), 공항(`airport`) 회랑 및 물동량 지표 |
++| **통계·스크랩** | `GET /api/trade-stats` | 집계 기준(`aggregation_basis`) 및 권역·품목별 교역·거시 지표 조회 |
++| | `POST /api/trade-stats` | 신규 무역통계 등록 (`aggregation_basis` 4종 필수 검증 및 `fx_impact_note` 환율 주석 저장) |
++| | `POST /api/scraps` | 기사·현장 스크랩 등록, `event_thread_id` 자동 병합, `missing_metadata_fields` 반환 |
++| **사건·EWS** | `GET /api/events` | 진행 중 사건(`is_replay=0`)과 과거 재연 사례(`is_replay=1`) 분리 조회 |
++| | `GET /api/ews` / `POST /api/ews` | 권역×산업/품목 EWS 등급 조회 및 등급(`alert`~`normal`)·익월 상향·노트 갱신 |
++| **분석·보고** | `POST /api/analyze` | 대상 기업·사건·규제 입력 시 3-Hop 역추적 + 5단계 인과분석 실행 및 초안 저장 |
++| | `PUT /api/reports/{report_id}` | 보고서 본문 편집 저장 (수정 시 기존 `approved` 상태를 자동으로 `needs_review`로 전환) |
++| | `POST /api/reports/{report_id}/review` | 책임자 검토 상태(`approve` | `request_changes` | `reject`) 및 검토 의견 기록 |
++| | `GET /api/reports/{report_id}/export` | 3종 템플릿(`desk_briefing`, `ews_monthly`, `kakao_insight`) HTML 생성 및 내부 ID 정제 출력 |
++| **근거·상세** | `GET /api/evidence/search` | FTS5 + Unicode + 한·영 기업명 동의어 확장 원문 근거 검색 |
++| | `GET /api/detail/{entity_type}/{id}` | 임의 엔티티 상세 속성 + 연결된 근거 목록(`evidence`) + 원문 메타 반환 |
++
++---
++
++## 6. 프론트엔드 UI/UX 및 컴포넌트 상세 구현 명세 (`web/`)
++
++프론트엔드(`web/index.html`, `web/styles.css`, `web/app.js`)는 단일 페이지 애플리케이션(SPA)으로 구성되며, 상단 글로벌 바, **7개 메인 화면 탭**, **2종의 SVG 시각화 엔진**, **상세 드릴다운 모달**, 그리고 **보고서 에디터·내보내기 워크플로우**를 제공합니다.
++
++### 6.1 글로벌 레이아웃 및 상단 툴바 (`index.html`)
++* **상단 헤더 바**: 시스템 타이틀, 전역 권역 선택기(7대 우선 권역 + 캘리포니아 비교군), 전역 산업 필터(13개 산업), 빠른 실행 버튼(**`+ 기사 스크랩 등록`**, **`+ 무역통계 입력`**).
++* **상시 가드레일 알림 배너**: `US-CA-NORTH` 또는 `US-CA-BAY9` 선택 시 *"북부 캘리포니아 및 베이지역 9개 카운티 지표는 캘리포니아 주 전체(`US-CA`) 통계와 분리 집계됩니다"* 안내 배너를 상단에 고정 표출.
++
++### 6.2 7개 메인 화면 구성 및 테이블 매핑 (`web/app.js`)
++
++| 탭 번호 및 화면명 | 상단 KPI 카드 구성 | 필터 툴바 | 메인 뷰 및 데이터 테이블 컬럼 매핑 (`cols` / `names`) |
++| :--- | :--- | :--- | :--- |
++| **1. 기업과 시설** | 추적 한국 기업 수, 현지 파트너사 수, 검증 좌표 시설 수, 주요 산업 클러스터 수 | 권역, 산업, 기업유형(한국/미국/글로벌), 검색어 | **상단 2분할 시각화**: 좌측 **시설 위치 지도(`loadMap`)** + 우측 **기업 관계 네트워크(`renderNetwork`)**<br>**하단 테이블**: 기업명(`company_name`), 역할(`role`), 권역(`region_name`), 산업(`industry_name`), 주요 시설(`facility_name`), 시설유형(`facility_type`), 근거건수(`evidence_count`) |
++| **2. 지역과 산업** | 7대 권역별 EWS 경보 건수, 핵심 산업 클러스터 수, 주요 거점 비율 | 권역 선택 카드(7+1), 13개 산업 매트릭스 셀 클릭 | **권역×산업 교차 히트맵 매트릭스** 및 선택 셀의 **품목 8대 필러 브리프** 아코디언 패널 + 미국 현지 대체 공급처 비교 테이블 |
++| **3. 수치 데이터** | 최신 교역액(집계기준 명시), 항만 TEU 물동량, 고용·투자 프록시 건수 | 지표유형(무역/거시/물류), 집계기준(`monthly`·`cumulative`·`annual`), 품목 | **집계기준 분리 차트** + **환율 착시 주석(`fx_impact_note`) 배지**<br>**테이블**: 지표명(`metric_name`), 권역(`region_name`), 기준기간(`period`), 집계기준(`aggregation_basis`), 수치(`value`), 단위(`unit`), 환율주석(`fx_impact_note`) |
++| **4. 사건과 위험** | 활성 경보(`alert`), 주의(`caution`), 관찰(`watch`), 과거 재연 시나리오(`is_replay=1`) 수 | 상태 탭(**진행 중 사건** vs **과거 재연 사례** 분리), EWS 등급, 권역 | **EWS 4단계 트리아지 관리 테이블** (인라인 등급 변경 드롭다운, `escalate_next_month` 체크박스, 담당자 메모 저장 버튼) + 사건 스레드 타임라인 |
++| **5. 분석과 보고서** | 생성된 분석 건수, 검토 대기 보고서, 승인 완료 보고서 | 대상 한국 기업, 대상 사건/규제, 템플릿 유형(3종) | **좌측**: 3-Hop 역추적 조건 설정 & **`분석 실행`** 버튼<br>**우측**: **5단계 인과분석 결과 뷰어** + **보고서 편집기(`editReport`)** + 검토 승인 바 + HTML 내보내기 버튼 |
++| **6. 자료와 근거** | 전체 근거 473건, 원문 대조 메모 102건, 근거 등급별(1\~4등급) 분포 | 한·영 통합 검색창, 근거 등급(1\~4등급), 메타데이터 누락 여부 | **원문 근거 검색 결과 리스트**: 발췌문(`excerpt`), 신뢰도 등급 배지(`1등급`~`4등급`), 출처문서명(`source_title`), 발행일(`published_at`), SHA-256 검증 상태 배지 |
++| **7. 관심 대상과 알림** | 규제 시행 D-Day 임박 건수, 익월 상향 예약 건수, 관심 품목·기업 수 | D-Day 정렬, 담당자별 필터, 상태별 필터 | **규제 발표→시행 시차 D-Day 카운트다운 카드** + 관심 기업/품목 모니터링 큐 + 리마인더 완료 처리 토글 |
++
++### 6.3 SVG 시각화 컴포넌트 상세 명세
++
++#### A. 시설 위치 지도 (`loadMap`)
++* **좌표 렌더링 원칙**: `facilities` 테이블에서 공공 GIS 또는 검증된 도로명 주소로 위·경도(`latitude`, `longitude`)가 확정된 시설만 필터링하여 SVG 좌표계로 투영하고 `<circle>` 마커로 렌더링합니다.
++* **환각 방지 제약**: 좌표가 확인되지 않은 시설에는 임의 좌표를 생성하지 않고 별도 *"좌표 미확인 시설 목록"* 배지로만 안내하며, 검증되지 않은 행정 경계선이나 임의의 해상·육상 운송 경로선을 지도 위에 임의 작도하지 않습니다.
++* **인터랙션**: 마커 호버 시 시설명·운영사·시설유형 툴팁을 표시하고, 클릭 시 `showDetail('facility', id)` 모달을 호출합니다.
++
++#### B. 기업 관계 네트워크 (`renderNetwork`)
++* **방향성 그래프 구조**: 출발 노드(`from_company_id`)에서 도착 노드(`to_company_id`)로 향하는 SVG `<marker>` 방향 화살표로 가치사슬 흐름을 시각화합니다.
++* **관계 유형별 엣지 시각 스타일**:
++  * **공급·주문 (`supply` / `order`)**: 실선, 파란색(`#2563eb`), 선 두께는 의존도(`dependency_level`)에 비례.
++  * **자산 인수·지분 투자 (`acquisition` / `investment`)**: 점선(`stroke-dasharray="5,4"`), 황토색(`#b45309`).
++  * **합작·기술 제휴 (`joint_venture` / `partnership`)**: 실선, 청록색(`#0f766e`).
++* **노드 시각 구분 및 인터랙션**:
++  * 한국 추적 기업(삼성전자, SK하이닉스, 대한항공, KAI 등)은 강조 테두리 노드로 배치하고, 1-Hop·2-Hop·3-Hop 거리에 따라 계층 배치합니다.
++  * 특정 노드 클릭 시 연결된 3-Hop 경로만 하이라이트하고 나머지 노드는 투명도(`opacity: 0.2`) 처리하며, 엣지 클릭 시 해당 거래 관계의 원문 근거(`evidence`)를 즉시 조회합니다.
++
++### 6.4 근거 드릴다운 모달 및 보고서 검토·내보내기 워크플로우
++1. **행 클릭 상세 모달 (`showDetail` & `renderEvidence`)**:
++   * 7개 화면의 어떤 테이블 행이나 지도·네트워크 요소를 클릭하더라도 우측 슬라이드오버/모달(`showDetail`)이 열리며, 상단에 엔티티 핵심 속성(내부 코드 제거 완료 상태)을 표시하고 하단에 `renderEvidence()`가 연결된 1\~4등급 근거 카드와 원문 대조 메모(`source_documents/*.md`) 열람 링크를 렌더링합니다.
++2. **보고서 편집 및 승인 자동 해제 워크플로우 (`editReport`)**:
++   * `분석 실행` 완료 후 생성된 5단계 인과분석 초안은 보고서 편집기(`editReport`)에서 담당자가 문구를 직접 수정·보완할 수 있습니다.
++   * **무결성 통제 규칙**: 이미 책임자 승인을 받은(`review_status == 'approved'`) 보고서라도 담당자가 본문을 1글자라도 수정하여 저장(`PUT /api/reports/{id}`)하는 순간 승인 상태가 자동으로 해제(`needs_review`)되며, `record_versions`에 수정 전·후 스냅샷이 기록됩니다.
++3. **3종 템플릿 HTML 내보내기 (`export_report`)**:
++   * 검토가 완료된 보고서는 목적에 따라 아래 3종 템플릿 중 하나를 선택해 독립 실행형 HTML 파일로 내보냅니다.
++     * **`desk_briefing` (`report_templates/report.html`)**: 무역관 데스크 심층 브리핑 및 5단계 인과분석 정식 보고서.
++     * **`ews_monthly` (`report_templates/ews_monthly.html`)**: 월간 조기경보(EWS) 종합 점검 및 차월 중점 관찰 대상 보고서.
++     * **`kakao_insight` (`report_templates/kakao_insight.html`)**: 유관기관·기업 담당자 메신저 전파용 핵심 요약 카드형 브리프.
++   * 내보내기 직전 `sanitize_internal_ids()` 필터가 실행되어 본문과 표 전체에서 `CO-*`, `FAC-*`, `PRD-*`, `EVD-*`, `SRC-*` 등 내부 식별자를 공식 한글·영문 명칭으로 치환합니다.
++
++---
++
++## 7. 5대 데이터 가드레일 및 환각 방지 설계
++
++시스템 전 계층(DB 검증기, 백엔드 서비스, 프론트엔드 UI, HTML 보고서 출력기)에는 아래 **5대 가드레일**이 강제 적용됩니다.
++
++1. **지리적 집계 분리 원칙**: 북부 캘리포니아(`US-CA-NORTH`)와 베이지역 9개 카운티(`US-CA-BAY9`) 지표에 캘리포니아 주 전체(`US-CA`) 수치를 대입하거나 합산하지 않습니다.
++2. **과거 재연 사례(`is_replay = 1`) 분리 원칙**: Boeing 2024년 파업·MAX-9 감항지시, Merbok 폭풍, 옐로스톤 홍수, Dixie 산불 등 과거 사례(`is_replay = 1`)는 현재 진행 중인 활성 EWS 경보(`is_replay = 0`)와 분리하여 스트레스 테스트 시나리오로만 활용합니다.
++3. **비공개 B2B 단가·재고 및 임의 GIS 좌표 생성 금지**: 기업 간 비공개 납품 단가·재고는 추정치를 생성하지 않고 CapEx·고용·교역 프록시로 대체하며, 공공 GIS·도로명 주소가 원문 확인된 시설만 지도 좌표를 표기합니다.
++4. **무역통계 집계 기준 분리 및 환율 착시 가드레일**: `monthly`·`cumulative`·`annual`·`point_in_time` 기준을 혼용하지 않으며, 달러(`USD`) 명목 증감 시 원/달러 환율 변동 착시 주석(`fx_impact_note`)을 병기합니다.
++5. **내부 시스템 코드 비노출 원칙**: 사용자 화면과 HTML 보고서 출력 시 `CO-*`, `FAC-*`, `PRD-*`, `EVD-*`, `SRC-*` 등 내부 DB 식별자가 절대 노출되지 않도록 치환합니다.
++
++---
++
++## 8. CLI 파이프라인, 자동화 검증 및 검수 기준
++
++### 8.1 표준 CLI 운영 명령어 (`run.py`)
++* `python3 run.py init`: 35개 테이블 DDL 마이그레이션 적용, 27개 기준 CSV 적재, 도메인 제약조건 검증.
++* `python3 run.py validate`: 외래키·복합키 참조 무결성 오류 `0건`, 102개 원문 대조 메모(`source_documents/`)의 `SHA-256` 해시 일치 여부 전수 검사.
++* `python3 run.py index`: `search_index/document_chunks.jsonl` 및 SQLite `FTS5` 검색 인덱스 재구축.
++* `python3 run.py serve --port 8000`: 백엔드 REST API 및 프론트엔드 SPA 웹 서버 실행.
++* `python3 run.py collect-usgs`: USGS 지진·수문 피드 수집 및 `ingestion_runs` 이력 기록.
++
++### 8.2 자동화 테스트 스위트 (`tests/`)
++* **단위·무결성 테스트 (`tests/test_runtime.py`, 10개 항목)**: DB 참조 무결성, 7대 권역·8대 필러 브리프, 대체 공급망 매트릭스, EWS 등급 갱신, 동일 사건 스레드 스크랩 병합(`event_thread_id`), 무역통계 집계기준·환율 가드레일, 3-Hop 네트워크 역추적, 물류 회랑 조회, 보고서 3종 템플릿 내보내기 및 내부 코드 비노출 검증.
++* **E2E 시나리오 테스트 (`tests/test_e2e_browser.py`, 8개 시나리오)**: 정적 웹 자산(`index.html`, `styles.css`, `app.js`) 및 GeoJSON 피처 무결성, 한·영 교차 근거 검색, 수동 스크랩 등록부터 인과분석·편집·승인·HTML 내보내기까지의 전 주기 왕복 검증.
+\ No newline at end of file
+diff --git a/docs/PROGRESS.md b/docs/PROGRESS.md
+new file mode 100644
+index 0000000..004c9b9
+--- /dev/null
++++ b/docs/PROGRESS.md
+@@ -0,0 +1,19 @@
++# PROGRESS — actual status
++
++## Snapshot date: 2026-11-19
++- Starting point: uploaded `KOTRA_final(1).zip`, not a verified live GitHub checkout.
++- Existing Python/SQLite/Vanilla JS prototype, 27 data CSV files, SQL migrations, tests, and local UI **already exist**.
++- Baseline `python run.py validate`: passed (`errors: []`, `valid: true`).
++- Baseline `python -m unittest discover -s tests -v`: 10 tests passed.
++- v2 specification docs merged into `docs/` without overwriting original docs.
++- New: `AGENTS.md`, `CURRENT_STATE_AUDIT.md`, `GAP_ANALYSIS.md`, updated `TASKS.md`, updated `.gitignore`.
++- **Not yet done:** GitHub commit/push, live browser QA, external data collection, code refactoring, actual schema migration, 22-county geography resolution.
++
++## Next task
++P00-04: compare this patch with GitHub working tree; check tracked files and sensitive material. Then P00-05 geography reconciliation before new regional aggregations.
++
++## Verification commands
++`python run.py validate`
++`python -m unittest discover -s tests -v`
++`git status`
++`git ls-files web inputs runtime`
+diff --git a/docs/SPEC_INTEGRATION_NOTES.md b/docs/SPEC_INTEGRATION_NOTES.md
+new file mode 100644
+index 0000000..f82c038
+--- /dev/null
++++ b/docs/SPEC_INTEGRATION_NOTES.md
+@@ -0,0 +1,7 @@
++# Spec integration notes
++
++The original `docs/` in the prototype is preserved. v2 files from `KOTRA_Spec_v2(1).zip` are copied into `docs/`, and original narrative specification is saved at `docs/ORIGINAL_kotra.md`. Existing files are not overwritten except `docs/TASKS.md` and `docs/PROGRESS.md` (the prototype did not contain these).
++
++**Important:** Some v2 documents were authored before prototype inspection. Where they describe prospective table names or endpoints, treat them as target requirements, not as statements about current implementation. See `CURRENT_STATE_AUDIT.md` and `GAP_ANALYSIS.md` first. The project-wide `AGENTS.md` defines precedence.
++
++The ZIP is an offline patch prepared from the uploaded snapshot. It has not been pushed to GitHub.
+diff --git a/docs/TASKS.md b/docs/TASKS.md
+new file mode 100644
+index 0000000..5eb35d1
+--- /dev/null
++++ b/docs/TASKS.md
+@@ -0,0 +1,32 @@
++# TASKS — prioritized implementation backlog (audited baseline)
++
++## Phase 00 — baseline and reconciliation
++- [x] P00-01 Audit uploaded ZIP, current API routes, SQL migrations, CSV inventory, and baseline tests.
++- [x] P00-02 Add AGENTS.md and update .gitignore to stop excluding frontend assets.
++- [x] P00-03 Preserve original prototype docs and merge v2 target docs without overwriting existing docs.
++- [ ] P00-04 Check actual GitHub HEAD and `git ls-files`; inspect tracked `inputs/`, `.env`, `runtime/`, `web/` before committing.
++- [ ] P00-05 Resolve Northern California 22-county vs existing 40-county assumption and Bay9 union; validate FIPS/GIS.
++- [ ] P00-06 Produce current-to-target schema map and API request/response fixtures; decide compatibility migrations.
++
++## Phase 01 — data first
++- [ ] P01-01 Source inventory: license, update cadence, provenance, rate limits and permitted collection method.
++- [ ] P01-02 Implement raw/staging/curated manifest and idempotent batch imports.
++- [ ] P01-03 Expand actual datasets with domain-level QA and source citations.
++
++## Phase 02 — backend/data scale
++- [ ] P02-01 Additive SQLite migrations, indexes and evidence status.
++- [ ] P02-02 Replace in-memory table filtering with SQL pagination and benchmarks.
++- [ ] P02-03 API schema fixtures, search and admin import endpoints.
++
++## Phase 03 — analysis/reports
++- [ ] P03-01 3-hop graph and confidence-aware EWS, alternative candidates.
++- [ ] P03-02 HTML/PDF/DOCX renderers and test fixtures.
++
++## Phase 04 — UI and QA
++- [ ] P04-01 Modern Hybrid design tokens and integrated home dashboard.
++- [ ] P04-02 Map boundaries, clustering, draggable network, 7 existing screens.
++- [ ] P04-03 Admin console and full browser E2E/visual/load QA.
++
++## Deferred production
++- [ ] P07-01 Optional AI adapters, AI report writing.
++- [ ] P07-02 Auth/RBAC, scheduled collection and deployment security.
+diff --git a/docs/prompts/PHASE_00.md b/docs/prompts/PHASE_00.md
+new file mode 100644
+index 0000000..6d671e9
+--- /dev/null
++++ b/docs/prompts/PHASE_00.md
+@@ -0,0 +1,20 @@
++# PHASE 00 — 설계 고정
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** 원본 기능 추적표와 실행 가능한 DDL/API 스키마 확정.
++**산출물:** requirements traceability, migrations, data dictionary, API fixtures.
++**검수:** SQL FK/DDL 및 schema fixture 검증.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_01.md b/docs/prompts/PHASE_01.md
+new file mode 100644
+index 0000000..2977540
+--- /dev/null
++++ b/docs/prompts/PHASE_01.md
+@@ -0,0 +1,20 @@
++# PHASE 01 — 실제 데이터 수집
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** 허용된 공개자료를 폭넓게 수집하고 출처 추적.
++**산출물:** source catalog, raw/staging/curated, import manifest.
++**검수:** 해시, 중복, 라이선스, idempotency.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_02.md b/docs/prompts/PHASE_02.md
+new file mode 100644
+index 0000000..374b836
+--- /dev/null
++++ b/docs/prompts/PHASE_02.md
+@@ -0,0 +1,20 @@
++# PHASE 02 — SQLite 구축
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** 마이그레이션·FTS5·검증기 완성.
++**산출물:** db migrations, index, loader, validate.
++**검수:** FK 0, 검색, 100k 합성 성능.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_03.md b/docs/prompts/PHASE_03.md
+new file mode 100644
+index 0000000..f92c687
+--- /dev/null
++++ b/docs/prompts/PHASE_03.md
+@@ -0,0 +1,20 @@
++# PHASE 03 — REST API
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** 조회·검색·관리 API 구현.
++**산출물:** route/service/store 모듈, API tests.
++**검수:** 성공·오류·페이지네이션·필터.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_04.md b/docs/prompts/PHASE_04.md
+new file mode 100644
+index 0000000..a91ac04
+--- /dev/null
++++ b/docs/prompts/PHASE_04.md
+@@ -0,0 +1,20 @@
++# PHASE 04 — 분석·보고서
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** BFS/EWS/대체 후보·3형식 출력.
++**산출물:** analysis engines, document model, renderers.
++**검수:** 3-Hop, 근거, 3x3 export.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_05.md b/docs/prompts/PHASE_05.md
+new file mode 100644
+index 0000000..96877df
+--- /dev/null
++++ b/docs/prompts/PHASE_05.md
+@@ -0,0 +1,20 @@
++# PHASE 05 — 프론트엔드
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** Modern Hybrid 8화면과 지도·네트워크.
++**산출물:** views/components/visualizations, CSS tokens.
++**검수:** 상호작용, 로딩/오류, 반응형.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_06.md b/docs/prompts/PHASE_06.md
+new file mode 100644
+index 0000000..5bfa547
+--- /dev/null
++++ b/docs/prompts/PHASE_06.md
+@@ -0,0 +1,20 @@
++# PHASE 06 — 관리자·QA
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** 업로드·이력·시스템 상태와 전체 QA.
++**산출물:** admin console, E2E, benchmark, screenshots.
++**검수:** 전체 흐름·성능·시각 검수.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.
+diff --git a/docs/prompts/PHASE_07.md b/docs/prompts/PHASE_07.md
+new file mode 100644
+index 0000000..76ae2f7
+--- /dev/null
++++ b/docs/prompts/PHASE_07.md
+@@ -0,0 +1,20 @@
++# PHASE 07 — 운영 확장
++
++## AI 코딩 도구에 전달할 지시
++`docs/MASTER_SPEC.md`, 관련 세부 명세서, `docs/TASKS.md`, `docs/PROGRESS.md` 및 `ORIGINAL_kotra.md`를 먼저 읽어라. 현재 저장소의 실제 파일을 확인한 뒤에만 구현 상태를 판단하라.
++
++**목표:** AI/정기 수집/RBAC/배포(초기 범위 외).
++**산출물:** AI adapter, scheduler, auth plan.
++**검수:** 보안·모델 회귀·승인 테스트.
++
++## 필수 실행 규칙
++1. 작업을 1~3개 작은 티켓으로 분해하고 각 티켓의 수정 파일·테스트를 먼저 제시.
++2. 실데이터·출처·좌표·납품관계·통계를 만들어내지 말 것. synthetic은 명시된 테스트 fixture에서만 사용.
++3. 현재 Python/SQLite/Vanilla JS 유지, 새로운 의존성은 근거와 버전 고정.
++4. 기존 작동 기능을 삭제하거나 API 계약을 임의 변경하지 말 것. 변경이 필요하면 명세와 테스트를 함께 수정.
++5. 실패·미구현·검증 불가를 숨기지 말 것. 실제 테스트 명령을 실행하고 결과를 기록.
++6. 끝나면 `docs/TASKS.md` 체크 및 `docs/PROGRESS.md`에 변경 파일, 검수 결과, 남은 블로커를 기록.
++7. 이번 Phase 외 범위는 구현하지 말 것. 다음 Phase의 필요조건만 명시.
++
++## 완료 보고 형식
++완료 티켓 / 수정 파일 / 실행 명령 / 통과·실패 테스트 / 실제 데이터 건수(해당 시) / 남은 문제 / 다음 티켓.

@@ -1,0 +1,18 @@
+--- a/tests/test_raw_import.py
++++ b/tests/test_raw_import.py
+@@ -1,5 +1,6 @@
+ """Raw ingestion safety, provenance and idempotency tests."""
+ import sqlite3
++from contextlib import closing
+ import tempfile
+ import unittest
+ from pathlib import Path
+@@ -20,7 +21,7 @@
+         self.assertEqual(first['status'], 'inserted')
+         self.assertEqual(second['status'], 'duplicate')
+         self.assertEqual(first['sha256'], second['sha256'])
+-        with sqlite3.connect(self.root / 'runtime' / 'raw_imports.sqlite') as db:
++        with closing(sqlite3.connect(self.root / 'runtime' / 'raw_imports.sqlite')) as db:
+             self.assertEqual(db.execute('SELECT count(*) FROM raw_imports').fetchone()[0], 1)
+             self.assertEqual(db.execute('SELECT count(*) FROM import_attempts').fetchone()[0], 2)
+ 

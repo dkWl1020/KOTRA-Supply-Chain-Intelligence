@@ -1,0 +1,310 @@
+diff --git a/ingest/staging.py b/ingest/staging.py
+new file mode 100644
+--- /dev/null
++++ b/ingest/staging.py
+@@ -0,0 +1,176 @@
++"""Validate imported CSV/JSON/JSONL records into an isolated staging SQLite DB.
++
++No writes to production kotra.sqlite or curated CSVs. Usage:
++python -m ingest.staging <sha256> --root . --schema path/to/schema.json
++"""
++import argparse
++import csv
++import hashlib
++import io
++import json
++import sqlite3
++from contextlib import closing
++from datetime import datetime, timezone
++from pathlib import Path
++
++
++def _utc():
++    return datetime.now(timezone.utc).isoformat()
++
++
++def _hash(path):
++    h = hashlib.sha256()
++    with path.open('rb') as f:
++        for block in iter(lambda: f.read(1024 * 1024), b''):
++            h.update(block)
++    return h.hexdigest()
++
++
++def _read_records(path):
++    suffix = path.suffix.lower()
++    with path.open('r', encoding='utf-8-sig', newline='') as f:
++        if suffix == '.csv':
++            reader = csv.DictReader(f)
++            if not reader.fieldnames or any(k is None or not k.strip() for k in reader.fieldnames):
++                raise ValueError('CSV requires nonempty column headers')
++            if len(reader.fieldnames) != len(set(reader.fieldnames)):
++                raise ValueError('Duplicate CSV headers')
++            for n, record in enumerate(reader, 2):
++                yield n, record
++        elif suffix == '.jsonl':
++            for n, line in enumerate(f, 1):
++                if line.strip():
++                    item = json.loads(line)
++                    if not isinstance(item, dict):
++                        raise ValueError('JSONL entries must be objects')
++                    yield n, item
++        elif suffix == '.json':
++            value = json.load(f)
++            if not isinstance(value, list):
++                raise ValueError('JSON root must be an array of objects')
++            for n, item in enumerate(value, 1):
++                if not isinstance(item, dict):
++                    raise ValueError('JSON entries must be objects')
++                yield n, item
++        else:
++            raise ValueError('Only CSV, JSON and JSONL can be staged')
++
++
++def _normalize(value, kind):
++    if value is None or value == '':
++        return None
++    if isinstance(value, str):
++        value = value.strip()
++    if kind == 'text':
++        return str(value)
++    if kind == 'integer':
++        if isinstance(value, bool) or str(value).strip() != str(int(str(value).strip())):
++            raise ValueError('invalid integer')
++        return int(value)
++    if kind == 'number':
++        from decimal import Decimal, InvalidOperation
++        try:
++            v = Decimal(str(value))
++        except InvalidOperation as exc:
++            raise ValueError('invalid number') from exc
++        if not v.is_finite():
++            raise ValueError('nonfinite number')
++        return str(v)
++    if kind == 'date':
++        return datetime.strptime(str(value), '%Y-%m-%d').date().isoformat()
++    raise ValueError('Unsupported schema type: ' + kind)
++
++
++def _schema(schema_path):
++    schema = json.loads(Path(schema_path).read_text(encoding='utf-8'))
++    if not isinstance(schema, dict) or not isinstance(schema.get('columns'), dict) or not schema['columns']:
++        raise ValueError('Schema requires columns mapping')
++    allowed = {'text', 'integer', 'number', 'date'}
++    for name, cfg in schema['columns'].items():
++        if not isinstance(name, str) or not isinstance(cfg, dict) or cfg.get('type') not in allowed:
++            raise ValueError('Invalid schema column')
++    return schema
++
++
++def stage_import(digest, *, root, schema_path, max_rows=500000):
++    root = Path(root).resolve()
++    if len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
++        raise ValueError('Invalid SHA-256')
++    if max_rows < 1:
++        raise ValueError('max_rows must be positive')
++    schema = _schema(schema_path)
++    schema_hash = hashlib.sha256(json.dumps(schema, sort_keys=True).encode()).hexdigest()
++    raw_db = root / 'runtime' / 'raw_imports.sqlite'
++    if not raw_db.is_file():
++        raise FileNotFoundError('Raw import manifest missing')
++    with closing(sqlite3.connect(raw_db)) as db:
++        row = db.execute('SELECT stored_path FROM raw_imports WHERE sha256=?', (digest,)).fetchone()
++    if row is None:
++        raise ValueError('Unknown raw import hash')
++    raw_root = (root / 'data' / 'raw' / 'objects').resolve()
++    path = (root / row[0]).resolve()
++    if not path.is_relative_to(raw_root) or not path.is_file() or path.is_symlink():
++        raise ValueError('Unsafe or missing raw object')
++    if _hash(path) != digest:
++        raise ValueError('Raw object integrity mismatch')
++    staging_db = root / 'runtime' / 'staging.sqlite'
++    staging_db.parent.mkdir(parents=True, exist_ok=True)
++    with closing(sqlite3.connect(staging_db)) as db:
++        db.execute('PRAGMA foreign_keys=ON')
++        db.execute('''CREATE TABLE IF NOT EXISTS staging_batches (
++            batch_id INTEGER PRIMARY KEY, raw_sha256 TEXT NOT NULL,
++            schema_sha256 TEXT NOT NULL, created_at TEXT NOT NULL,
++            accepted INTEGER NOT NULL, rejected INTEGER NOT NULL,
++            UNIQUE(raw_sha256, schema_sha256))''')
++        db.execute('''CREATE TABLE IF NOT EXISTS staging_rows (
++            batch_id INTEGER NOT NULL REFERENCES staging_batches(batch_id),
++            source_row INTEGER NOT NULL, normalized_json TEXT, errors_json TEXT,
++            PRIMARY KEY(batch_id, source_row))''')
++        prior = db.execute('SELECT batch_id, accepted, rejected FROM staging_batches WHERE raw_sha256=? AND schema_sha256=?',
++                           (digest, schema_hash)).fetchone()
++        if prior:
++            return {'status': 'existing', 'batch_id': prior[0], 'accepted': prior[1], 'rejected': prior[2]}
++        records = []
++        accepted = rejected = 0
++        for idx, (line, record) in enumerate(_read_records(path), 1):
++            if idx > max_rows:
++                raise ValueError('Record count exceeds max_rows; nothing staged')
++            result, errors = {}, []
++            for col, cfg in schema['columns'].items():
++                try:
++                    value = _normalize(record.get(col), cfg['type'])
++                    if cfg.get('required') and value is None:
++                        raise ValueError('required value missing')
++                    result[col] = value
++                except (ValueError, TypeError, OverflowError) as exc:
++                    errors.append(f'{col}: {exc}')
++            if None in record:
++                errors.append('unexpected extra CSV values')
++            if errors:
++                rejected += 1
++            else:
++                accepted += 1
++            records.append((line, json.dumps(result, ensure_ascii=False) if not errors else None,
++                            json.dumps(errors, ensure_ascii=False) if errors else None))
++        with db:
++            cursor = db.execute('INSERT INTO staging_batches(raw_sha256,schema_sha256,created_at,accepted,rejected) VALUES (?,?,?,?,?)',
++                                (digest, schema_hash, _utc(), accepted, rejected))
++            batch_id = cursor.lastrowid
++            db.executemany('INSERT INTO staging_rows(batch_id,source_row,normalized_json,errors_json) VALUES (?,?,?,?)',
++                           ((batch_id, *r) for r in records))
++        return {'status': 'staged', 'batch_id': batch_id, 'accepted': accepted, 'rejected': rejected}
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('sha256')
++    parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
++    parser.add_argument('--schema', type=Path, required=True)
++    parser.add_argument('--max-rows', type=int, default=500000)
++    args = parser.parse_args()
++    print(json.dumps(stage_import(args.sha256, root=args.root, schema_path=args.schema,
++                                  max_rows=args.max_rows), ensure_ascii=False, indent=2))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/tests/test_staging.py b/tests/test_staging.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_staging.py
+@@ -0,0 +1,67 @@
++"""Staging import integration tests, including Windows-safe SQLite cleanup."""
++import json
++import sqlite3
++import tempfile
++import unittest
++from contextlib import closing
++from pathlib import Path
++from ingest.raw_import import ingest_file
++from ingest.staging import stage_import
++
++
++class StagingTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.root = Path(self.tmp.name)
++        self.schema = self.root / 'schema.json'
++        self.schema.write_text(json.dumps({'columns': {
++            'name': {'type': 'text', 'required': True},
++            'count': {'type': 'integer', 'required': True},
++            'date': {'type': 'date'}}}), encoding='utf-8')
++
++    def _import(self, name, content):
++        p = self.root / name
++        p.write_text(content, encoding='utf-8')
++        return ingest_file(p, root=self.root)['sha256']
++
++    def test_accept_reject_and_idempotency(self):
++        digest = self._import('records.csv', 'name,count,date\nAlpha,0,2026-01-01\nBeta,wrong,2026-01-02\n')
++        first = stage_import(digest, root=self.root, schema_path=self.schema)
++        self.assertEqual((first['accepted'], first['rejected']), (1, 1))
++        again = stage_import(digest, root=self.root, schema_path=self.schema)
++        self.assertEqual(again['status'], 'existing')
++        with closing(sqlite3.connect(self.root / 'runtime' / 'staging.sqlite')) as db:
++            self.assertEqual(db.execute('SELECT count(*) FROM staging_rows').fetchone()[0], 2)
++            row = db.execute('SELECT normalized_json FROM staging_rows WHERE errors_json IS NULL').fetchone()[0]
++            self.assertEqual(json.loads(row)['count'], 0)
++
++    def test_jsonl_and_json(self):
++        for name, body in [('records.jsonl', '{"name":"A","count":2}\n'),
++                           ('records.json', '[{"name":"B","count":3}]')]:
++            digest = self._import(name, body)
++            self.assertEqual(stage_import(digest, root=self.root, schema_path=self.schema)['accepted'], 1)
++
++    def test_limit_rolls_back(self):
++        digest = self._import('many.csv', 'name,count\nA,1\nB,2\n')
++        with self.assertRaises(ValueError):
++            stage_import(digest, root=self.root, schema_path=self.schema, max_rows=1)
++        with closing(sqlite3.connect(self.root / 'runtime' / 'staging.sqlite')) as db:
++            self.assertEqual(db.execute('SELECT count(*) FROM staging_batches').fetchone()[0], 0)
++
++    def test_reject_corrupt_raw(self):
++        digest = self._import('data.csv', 'name,count\nA,1\n')
++        p = next((self.root / 'data' / 'raw' / 'objects').iterdir())
++        p.write_text('tampered', encoding='utf-8')
++        with self.assertRaises(ValueError):
++            stage_import(digest, root=self.root, schema_path=self.schema)
++
++    def test_schema_required(self):
++        digest = self._import('data.csv', 'name,count\nA,1\n')
++        self.schema.write_text('{}', encoding='utf-8')
++        with self.assertRaises(ValueError):
++            stage_import(digest, root=self.root, schema_path=self.schema)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/docs/PHASE_01_STAGING.md b/docs/PHASE_01_STAGING.md
+new file mode 100644
+--- /dev/null
++++ b/docs/PHASE_01_STAGING.md
+@@ -0,0 +1,28 @@
++# Phase 01-03 — offline staging validation
++
++This is an **additive, offline** feature. It never writes to `runtime/kotra.sqlite`, curated CSVs, or production tables. It requires an object previously imported using `python -m ingest.raw_import`.
++
++## Example
++
++Create a JSON schema file, e.g. `schema.json`:
++
++```json
++{"columns":{"name":{"type":"text","required":true},"count":{"type":"integer"},"date":{"type":"date"}}}
++```
++
++Supported types: `text`, `integer`, `number` (stored as decimal string to avoid rounding), and `date` (`YYYY-MM-DD`). Fields not in the schema are not promoted; null/empty values are allowed unless `required` is true. Each invalid row is retained with errors and source row number. This is a basic schema, **not** full JSON Schema.
++
++```powershell
++python -m ingest.raw_import data/example.csv --source-id SRC-EXAMPLE
++python -m ingest.staging <sha256-from-previous-command> --schema schema.json
++```
++
++The staging result is stored in `runtime/staging.sqlite` with per-row errors. Re-running the same raw hash and schema returns the existing batch. This phase does not perform entity resolution, provenance verification, or curated promotion. No public data has been newly collected.
++
++## Limits and next work
++
++- Default maximum 500,000 records per batch; parsing is currently buffered in memory and should be streamed in a later performance iteration.
++- The raw object is SHA-256 checked before parsing. Corrupt objects fail closed.
++- Unsupported file formats (`.md`, `.txt`) can be archived as raw evidence but not staged as structured records.
++- `source_id` and verification metadata remain in the raw manifest; curated promotion must preserve provenance.
++- Do not treat staged rows as verified facts or production data.
+diff --git a/docs/PROGRESS.md b/docs/PROGRESS.md
+--- a/docs/PROGRESS.md
++++ b/docs/PROGRESS.md
+@@ -30,3 +30,8 @@
+ - Production DB, curated CSVs and existing APIs are unchanged.
+ - No external dataset collected and no AI integration added.
+ - Next: staging normalization and controlled curated promotion.
++
++## Phase 01-03 — offline structured staging
++- Added `ingest/staging.py` for CSV/JSON/JSONL schema validation, row-level errors, and idempotent staging batches.
++- Added `tests/test_staging.py` and `docs/PHASE_01_STAGING.md`.
++- No production DB changes and no new external data collection. Curated promotion remains deferred.
+diff --git a/docs/TASKS.md b/docs/TASKS.md
+--- a/docs/TASKS.md
++++ b/docs/TASKS.md
+@@ -30,3 +30,8 @@
+ ## Deferred production
+ - [ ] P07-01 Optional AI adapters, AI report writing.
+ - [ ] P07-02 Auth/RBAC, scheduled collection and deployment security.
++
++## Phase 01-03 checkpoint
++- [x] P01-03a Stage structured raw files with typed validation and row-level rejects.
++- [ ] P01-03b Implement source-aware curated promotion and entity reconciliation.
++- [ ] P01-03c Acquire and license-check additional real datasets.
